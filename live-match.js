@@ -1,13 +1,12 @@
-// -------------------------------------------
-//  ⚽ سكربت الصفحة الرئيسية HAJMASPORT
-// -------------------------------------------
+// -------------------------------------------------------
+// 🔥 كود الصفحة الرئيسية HAJMASPORT (متوافق مع HTML المرسل)
+// -------------------------------------------------------
 
-// التحقق من الصفحة الرئيسية
 function isHomePage() {
   return !window.location.search.includes("fixture=");
 }
 
-// بيانات الصفحة الرئيسية التجريبية
+// بيانات المباريات التجريبية
 function getHomePageData() {
   return {
     today: [
@@ -91,83 +90,71 @@ function getHomePageData() {
   };
 }
 
-// -------------------------------------------
-// وظائف الصفحة الرئيسية
-// -------------------------------------------
+// -------------------------------------------------------
+// 🔹 عرض المباريات في الصفحة
+// -------------------------------------------------------
 
-// إعداد الصفحة الرئيسية
 function setupHomePage() {
   const matchesData = getHomePageData();
 
-  // عرض مباريات اليوم عند البداية
+  // عرض مباريات اليوم عند التحميل
   displayHomeMatches("today", matchesData);
 
-  // إعداد التبويبات
-  setupHomeTabs(matchesData);
-
-  // إعداد النقر على البطاقات
-  setupMatchClicks();
+  // تفعيل الأزرار العلوية
+  setupTabs(matchesData);
 }
 
-// عرض المباريات في الصفحة الرئيسية
+// دالة عرض المباريات
 function displayHomeMatches(tabName, matchesData) {
   const container = document.getElementById("matches-container");
   if (!container) return;
 
-  container.innerHTML = "";
+  container.innerHTML = ""; // تنظيف القديم
 
   const matches = matchesData[tabName] || [];
 
   if (matches.length === 0) {
     container.innerHTML =
-      '<div style="padding: 40px; text-align: center; color: #b3b3b3;">لا توجد مباريات في هذا القسم</div>';
+      '<div style="text-align:center; padding:40px; color:#999;">لا توجد مباريات في هذا القسم</div>';
     return;
   }
 
   matches.forEach((match) => {
-    const card = createHomeMatchCard(match);
+    const card = document.createElement("div");
+    card.className = "match-card";
+    card.dataset.fixture = match.fixtureId;
+
+    card.innerHTML = `
+      <div class="teams-row">
+        <div class="team">
+          <div class="team-name">${match.homeTeam}</div>
+        </div>
+        <div class="score">
+          <span>${match.homeScore}</span> - <span>${match.awayScore}</span>
+        </div>
+        <div class="team">
+          <div class="team-name">${match.awayTeam}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="league">${match.league}</span>
+        <span class="time">${match.time}</span>
+        <span class="status ${match.statusClass}">${match.status}</span>
+      </div>
+    `;
+
     container.appendChild(card);
   });
 }
 
-// إنشاء بطاقة مباراة واحدة
-function createHomeMatchCard(match) {
-  const card = document.createElement("div");
-  card.className = "match-card";
-  card.dataset.fixture = match.fixtureId;
-
-  card.innerHTML = `
-      <div class="match-row">
-        <div class="teams">
-          <div class="team home">
-            <div class="logo">${match.homeTeam.charAt(0)}</div>
-            <div class="name">${match.homeTeam}</div>
-          </div>
-          <div class="score">
-            <span class="home-score">${match.homeScore}</span>
-            <span class="sep">-</span>
-            <span class="away-score">${match.awayScore}</span>
-          </div>
-          <div class="team away">
-            <div class="logo">${match.awayTeam.charAt(0)}</div>
-            <div class="name">${match.awayTeam}</div>
-          </div>
-        </div>
-        <div class="meta">
-          <div class="league">${match.league}</div>
-          <div class="time">${match.time}</div>
-          <div class="status ${match.statusClass}">${match.status}</div>
-        </div>
-      </div>
-  `;
-
-  return card;
-}
-
-// إعداد التبويبات
-function setupHomeTabs(matchesData) {
-  const tabs = document.querySelectorAll(".home-tab");
-  if (!tabs.length) return;
+// -------------------------------------------------------
+// 🔹 إعداد أزرار التبويبات (اليوم / مباشر / غداً / الأخبار)
+// -------------------------------------------------------
+function setupTabs(matchesData) {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const sectionTitle = document.getElementById("section-title");
+  const newsSection = document.getElementById("news-section");
+  const matchesSection = document.getElementById("matches-section");
 
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -175,37 +162,31 @@ function setupHomeTabs(matchesData) {
       tab.classList.add("active");
 
       const tabName = tab.dataset.tab;
-      displayHomeMatches(tabName, matchesData);
+
+      // التبديل بين الأقسام
+      if (tabName === "news") {
+        matchesSection.style.display = "none";
+        newsSection.style.display = "block";
+        sectionTitle.textContent = "آخر الأخبار الرياضية";
+      } else {
+        newsSection.style.display = "none";
+        matchesSection.style.display = "block";
+
+        let title = "جدول المباريات";
+        if (tabName === "today") title = "مباريات اليوم";
+        if (tabName === "live") title = "مباريات مباشرة";
+        if (tabName === "tomorrow") title = "مباريات الغد";
+        sectionTitle.textContent = title;
+
+        displayHomeMatches(tabName, matchesData);
+      }
     });
   });
 }
 
-// إعداد النقر على المباريات (للانتقال إلى صفحة المباراة)
-function setupMatchClicks() {
-  const container = document.getElementById("matches-container");
-  if (!container) return;
-
-  container.addEventListener("click", (e) => {
-    const card = e.target.closest(".match-card");
-    if (!card) return;
-    const fixtureId = card.dataset.fixture;
-    if (fixtureId) {
-      window.location.search = `?fixture=${fixtureId}`;
-    }
-  });
-}
-
-// -------------------------------------------
-// تشغيل الصفحة الرئيسية عند تحميل DOM
-// -------------------------------------------
+// -------------------------------------------------------
+// 🔹 تشغيل الكود عند تحميل الصفحة
+// -------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
-  try {
-    if (isHomePage()) {
-      setupHomePage();
-    } else {
-      console.log("ليست الصفحة الرئيسية.");
-    }
-  } catch (error) {
-    console.error("خطأ أثناء تحميل الصفحة:", error);
-  }
+  if (isHomePage()) setupHomePage();
 });
