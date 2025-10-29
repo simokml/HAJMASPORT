@@ -1,3 +1,92 @@
+// التحقق من نوع الصفحة
+function isHomePage() {
+    return !window.location.search.includes('fixture=');
+}
+
+// بيانات احتياطية للصفحة الرئيسية
+function getHomePageData() {
+    return {
+        today: [
+            {
+                fixtureId: "19439347",
+                homeTeam: "ريال مدريد",
+                awayTeam: "برشلونة", 
+                homeScore: 2,
+                awayScore: 1,
+                status: "انتهت",
+                statusClass: "finished",
+                league: "الدوري الإسباني",
+                channel: "beIN Sports 1 HD",
+                time: "22:00"
+            },
+            {
+                fixtureId: "19439468",
+                homeTeam: "باريس سان جيرمان",
+                awayTeam: "مارسيليا",
+                homeScore: 0,
+                awayScore: 0,
+                status: "لم تبدأ",
+                statusClass: "upcoming",
+                league: "الدوري الفرنسي",
+                channel: "beIN Sports 3 HD",
+                time: "21:00"
+            }
+        ],
+        live: [
+            {
+                fixtureId: "19439356",
+                homeTeam: "مانشستر سيتي",
+                awayTeam: "ليفربول",
+                homeScore: 1,
+                awayScore: 1,
+                status: "مباشر",
+                statusClass: "live",
+                league: "الدوري الإنجليزي",
+                channel: "beIN Sports 2 HD",
+                time: "الدقيقة 75"
+            },
+            {
+                fixtureId: "19573385",
+                homeTeam: "أتلتيكو مدريد",
+                awayTeam: "ريال مدريد",
+                homeScore: 1,
+                awayScore: 2,
+                status: "مباشر",
+                statusClass: "live",
+                league: "كأس السوبر الإسباني",
+                channel: "beIN Sports 1 HD",
+                time: "الدقيقة 60"
+            }
+        ],
+        tomorrow: [
+            {
+                fixtureId: "19439384",
+                homeTeam: "تشيلسي",
+                awayTeam: "أرسنال",
+                homeScore: 0,
+                awayScore: 0,
+                status: "غداً",
+                statusClass: "upcoming",
+                league: "الدوري الإنجليزي",
+                channel: "beIN Sports 1 HD",
+                time: "18:30"
+            },
+            {
+                fixtureId: "19439403",
+                homeTeam: "بايرن ميونخ",
+                awayTeam: "بوروسيا دورتموند",
+                homeScore: 0,
+                awayScore: 0,
+                status: "غداً",
+                statusClass: "upcoming",
+                league: "الدوري الألماني",
+                channel: "beIN Sports 2 HD",
+                time: "20:30"
+            }
+        ]
+    };
+}
+
 // الحصول على معرف المباراة من URL
 function getFixtureIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -530,20 +619,139 @@ function refreshPlayer() {
     }
 }
 
+// وظائف الصفحة الرئيسية
+function setupHomePage() {
+    const matchesData = getHomePageData();
+    
+    // إظهار رسالة البيانات التجريبية
+    const apiNotice = document.getElementById('api-notice');
+    if (apiNotice) {
+        apiNotice.style.display = 'block';
+    }
+    
+    // عرض مباريات اليوم افتراضياً
+    displayHomeMatches('today', matchesData);
+    
+    // إعداد التبويبات
+    setupHomeTabs(matchesData);
+    
+    // إعداد النقر على المباريات
+    setupMatchClicks();
+}
+
+function displayHomeMatches(tabName, matchesData) {
+    const container = document.getElementById('matches-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const matches = matchesData[tabName] || [];
+    
+    if (matches.length === 0) {
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #b3b3b3;">لا توجد مباريات في هذا القسم</div>';
+        return;
+    }
+    
+    matches.forEach(match => {
+        const matchCard = createHomeMatchCard(match);
+        container.appendChild(matchCard);
+    });
+}
+
+function createHomeMatchCard(match) {
+    const matchCard = document.createElement('div');
+    matchCard.className = 'match-card';
+    matchCard.style.cursor = 'pointer';
+    matchCard.setAttribute('data-fixture-id', match.fixtureId);
+    
+    const homeTeamInitial = match.homeTeam.charAt(0);
+    const awayTeamInitial = match.awayTeam.charAt(0);
+    
+    matchCard.innerHTML = `
+        <div class="team-home">
+            <div class="team-logo">${homeTeamInitial}</div>
+            <div class="team-info">
+                <div class="team-name">${match.homeTeam}</div>
+                <div class="league-info">
+                    <span>🏆</span>
+                    <span>${match.league}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="match-center">
+            <div class="match-score">${match.homeScore} - ${match.awayScore}</div>
+            <div class="match-status ${match.statusClass}">${match.status}</div>
+            <div class="match-time">${match.time}</div>
+            <div class="channel-info">📺 ${match.channel}</div>
+        </div>
+        
+        <div class="team-away">
+            <div class="team-logo">${awayTeamInitial}</div>
+            <div class="team-info">
+                <div class="team-name">${match.awayTeam}</div>
+                <div class="league-info">
+                    <span>🏆</span>
+                    <span>${match.league}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return matchCard;
+}
+
+function setupHomeTabs(matchesData) {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // إزالة الفئة النشطة من جميع الأزرار
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // إضافة الفئة النشطة للزر المضغوط
+            button.classList.add('active');
+            
+            // عرض المباريات المناسبة
+            const tabName = button.getAttribute('data-tab');
+            displayHomeMatches(tabName, matchesData);
+        });
+    });
+}
+
+function setupMatchClicks() {
+    document.addEventListener('click', (e) => {
+        const matchCard = e.target.closest('.match-card');
+        if (matchCard) {
+            // تأثير بصري
+            matchCard.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                matchCard.style.transform = 'scale(1)';
+            }, 150);
+            
+            // فتح صفحة المباراة المباشرة
+            const fixtureId = matchCard.getAttribute('data-fixture-id');
+            if (fixtureId) {
+                window.location.href = `live-match.html?fixture=${fixtureId}`;
+            }
+        }
+    });
+}
+
 // تشغيل التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     const fixtureId = getFixtureIdFromUrl();
     
     if (!fixtureId) {
-        showError('معرف المباراة غير موجود في الرابط');
-        return;
-    }
-    
-    // جلب بيانات المباراة
-    fetchLiveMatchData(fixtureId);
-    
-    // تحديث البيانات كل 30 ثانية للمباريات المباشرة
-    setInterval(() => {
+        // الصفحة الرئيسية
+        setupHomePage();
+    } else {
+        // صفحة المباراة المباشرة
         fetchLiveMatchData(fixtureId);
-    }, 30000);
+        
+        // تحديث البيانات كل 30 ثانية للمباريات المباشرة
+        setInterval(() => {
+            fetchLiveMatchData(fixtureId);
+        }, 30000);
+    }
 });

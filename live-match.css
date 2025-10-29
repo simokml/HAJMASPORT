@@ -371,16 +371,253 @@ body {
     background: #b20710;
 }
 
+/* Homepage Styles */
+.nav-tabs {
+    background-color: #222222;
+    border-bottom: 1px solid #333;
+    padding: 0;
+}
+
+.nav-tabs .container {
+    display: flex;
+    gap: 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 15px 25px;
+    font-size: 16px;
+    font-family: 'Cairo', Arial, sans-serif;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    color: #b3b3b3;
+}
+
+.tab-btn.active {
+    color: #e50914;
+    border-bottom-color: #e50914;
+    background-color: #333333;
+}
+
+.tab-btn:hover {
+    background-color: #333333;
+    color: #e50914;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #e50914, #b20710);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+}
+
+.section-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.matches-container {
+    background: #1f1f1f;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.match-card {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #333333;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.match-card:hover {
+    background-color: #2a2a2a;
+}
+
+.match-card:last-child {
+    border-bottom: none;
+}
+
+.team-home, .team-away {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.team-away {
+    flex-direction: row-reverse;
+    text-align: left;
+}
+
+.team-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #333333, #555555);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 18px;
+    border: 2px solid #e50914;
+}
+
+.team-info {
+    flex: 1;
+}
+
+.team-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+.league-info {
+    font-size: 13px;
+    color: #b3b3b3;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.match-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    padding: 0 20px;
+}
+
+.match-score {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e50914;
+    margin-bottom: 8px;
+}
+
+.match-status {
+    background: #e50914;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.match-status.live {
+    background: #46d369;
+    animation: pulse 2s infinite;
+}
+
+.match-status.finished {
+    background: #666666;
+}
+
+.match-time {
+    font-size: 12px;
+    color: #b3b3b3;
+}
+
+.channel-info {
+    font-size: 12px;
+    color: #e50914;
+    font-weight: 600;
+}
+
+.site-footer {
+    background: #0a0a0a;
+    color: #b3b3b3;
+    padding: 40px 0 20px;
+    margin-top: 50px;
+}
+
+.site-info {
+    text-align: center;
+    font-size: 14px;
+}
+
+.site-info p {
+    margin-bottom: 5px;
+}
+
+/* Social Links */
+.social-links {
+    display: flex;
+    gap: 10px;
+}
+
+.social-link {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.social-link:hover {
+    transform: scale(1.1);
+}
+
+.social-link.telegram { background-color: #0088cc; }
+.social-link.twitter { background-color: #000; }
+.social-link.youtube { background-color: #ff0000; }
+.social-link.facebook { background-color: #1877f2; }
+.social-link.instagram { background-color: #e4405f; }
+
 /* Responsive */
 @media (max-width: 768px) {
-    .live-score {
+    .header .container {
         flex-direction: column;
-        gap: 30px;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .nav-tabs .container {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .match-card {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .team-home, .team-away {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .team-away {
+        flex-direction: row;
     }
     
     .match-center {
-        padding: 0;
         order: -1;
+        padding: 0;
+    }
+    
+    .live-score {
+        flex-direction: column;
+        gap: 30px;
     }
     
     .stats-container {
@@ -389,10 +626,6 @@ body {
     
     .team-score {
         font-size: 36px;
-    }
-    
-    .match-time {
-        font-size: 28px;
     }
     
     .player-header {

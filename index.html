@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAJMASPORT - المباريات الرياضية المباشرة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="live-match.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>HAJMASPORT</h1>
+                <span>hajmasport.com</span>
+            </div>
+            <div class="social-links">
+                <a href="#" class="social-link telegram">T</a>
+                <a href="#" class="social-link twitter">X</a>
+                <a href="#" class="social-link youtube">Y</a>
+                <a href="#" class="social-link facebook">F</a>
+                <a href="#" class="social-link instagram">I</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <div class="container">
+            <button class="tab-btn active" data-tab="today">مباريات اليوم</button>
+            <button class="tab-btn" data-tab="live">مباريات مباشرة</button>
+            <button class="tab-btn" data-tab="tomorrow">مباريات الغد</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="api-notice" id="api-notice" style="display: none;">
+                <div style="background: #333; color: #e50914; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 14px;">
+                    📡 يتم عرض بيانات تجريبية. لعرض المباريات الحقيقية، يرجى إضافة مفتاح API في ملف live-match.js
+                </div>
+            </div>
+            
+            <div class="matches-section">
+                <div class="section-header">
+                    <h2>جدول المباريات</h2>
+                </div>
+                
+                <div class="matches-container" id="matches-container">
+                    <!-- المباريات ستُضاف هنا بواسطة JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="site-info">
+                <p>&copy; 2024 HAJMASPORT. جميع الحقوق محفوظة.</p>
+                <p>موقع لعرض المباريات الرياضية المباشرة</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="live-match.js"></script>
+</body>
+</html>
