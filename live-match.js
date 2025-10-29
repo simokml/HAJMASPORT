@@ -1,4 +1,4 @@
-حسنن هل يمكنك إزالة جداول المباريات وترك جدول واحد في الاقسام كاملة
+
 // التحقق من نوع الصفحة
 function isHomePage() {
 return !window.location.search.includes('fixture=');
