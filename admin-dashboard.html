@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - HAJMASPORT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="live-match.css">
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #e50914, #b20710);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .welcome-text h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .welcome-text p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', Arial, sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #ffffff;
+            color: #e50914;
+        }
+        
+        .btn-primary:hover {
+            background: #f0f0f0;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-section, .actions-section {
+            background: #1f1f1f;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .section-title {
+            color: #e50914;
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #b3b3b3;
+        }
+        
+        .stat-value {
+            color: #e50914;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #e50914, #b20710);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', Arial, sans-serif;
+        }
+        
+        .action-btn:hover {
+            background: linear-gradient(135deg, #b20710, #8b0000);
+            transform: translateY(-2px);
+        }
+        
+        .articles-section {
+            background: #1f1f1f;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .articles-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+        }
+        
+        .article-info h4 {
+            color: #ffffff;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .article-info p {
+            color: #b3b3b3;
+            font-size: 12px;
+        }
+        
+        .article-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header .container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="welcome-text">
+                <h1>مرحباً، صديق محمد 👋</h1>
+                <p>لوحة تحكم إدارة المقالات والأخبار</p>
+            </div>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-primary">عرض الموقع</a>
+                <button class="btn btn-secondary" onclick="logout()">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard-content">
+                <div class="stats-section">
+                    <h3 class="section-title">📊 الإحصائيات</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">إجمالي المقالات</span>
+                        <span class="stat-value" id="total-articles">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">المقالات اليوم</span>
+                        <span class="stat-value" id="today-articles">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">آخر مقال</span>
+                        <span class="stat-value" id="last-article">لا يوجد</span>
+                    </div>
+                </div>
+                
+                <div class="actions-section">
+                    <h3 class="section-title">⚡ الإجراءات السريعة</h3>
+                    <button class="action-btn" onclick="openAddArticleModal()">
+                        📝 إضافة مقال جديد
+                    </button>
+                    <button class="action-btn" onclick="refreshStats()">
+                        🔄 تحديث الإحصائيات
+                    </button>
+                    <button class="action-btn" onclick="exportArticles()">
+                        📥 تصدير المقالات
+                    </button>
+                </div>
+            </div>
+            
+            <div class="articles-section">
+                <h3 class="section-title">📰 المقالات المنشورة</h3>
+                <div class="articles-list" id="articles-list">
+                    <!-- المقالات ستُضاف هنا -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- نافذة إضافة مقال -->
+    <div id="add-article-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1f1f1f; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3 style="color: #e50914; margin-bottom: 20px;">📝 إضافة مقال جديد</h3>
+            
+            <form id="article-form">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">عنوان المقال</label>
+                    <input type="text" id="article-title" required style="width: 100%; padding: 10px; background: #333; border: 1px solid #555; border-radius: 5px; color: #fff;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">التصنيف</label>
+                    <select id="article-category" required style="width: 100%; padding: 10px; background: #333; border: 1px solid #555; border-radius: 5px; color: #fff;">
+                        <option value="">اختر التصنيف</option>
+                        <option value="كرة القدم">كرة القدم</option>
+                        <option value="الانتقالات">الانتقالات</option>
+                        <option value="الدوريات">الدوريات</option>
+                        <option value="أخبار عامة">أخبار عامة</option>
+                        <option value="تحليلات">تحليلات</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">رابط الصورة</label>
+                    <input type="url" id="article-image" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; background: #333; border: 1px solid #555; border-radius: 5px; color: #fff;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">محتوى المقال</label>
+                    <textarea id="article-content" required rows="8" style="width: 100%; padding: 10px; background: #333; border: 1px solid #555; border-radius: 5px; color: #fff; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">اسم الكاتب</label>
+                    <input type="text" id="article-author" value="صديق محمد" style="width: 100%; padding: 10px; background: #333; border: 1px solid #555; border-radius: 5px; color: #fff;">
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn" style="flex: 1; background: #e50914; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer;">🚀 نشر المقال</button>
+                    <button type="button" onclick="closeAddArticleModal()" class="btn" style="flex: 1; background: #666; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer;">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>
