@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAJMASPORT - المباراة المباشرة</title>
+    <link rel="stylesheet" href="live-match.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>HAJMASPORT</h1>
+                <span>المباراة المباشرة</span>
+            </div>
+            <button class="close-btn" onclick="window.close()">✕</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- معلومات المباراة -->
+            <div class="match-info" id="match-info">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل بيانات المباراة...</p>
+                </div>
+            </div>
+
+            <!-- النتيجة المباشرة -->
+            <div class="live-score" id="live-score" style="display: none;">
+                <div class="team home-team">
+                    <div class="team-logo" id="home-logo"></div>
+                    <div class="team-name" id="home-name"></div>
+                    <div class="team-score" id="home-score">0</div>
+                </div>
+                
+                <div class="match-center">
+                    <div class="match-time" id="match-time">00:00</div>
+                    <div class="match-status" id="match-status">لم تبدأ</div>
+                    <div class="league-name" id="league-name"></div>
+                </div>
+                
+                <div class="team away-team">
+                    <div class="team-logo" id="away-logo"></div>
+                    <div class="team-name" id="away-name"></div>
+                    <div class="team-score" id="away-score">0</div>
+                </div>
+            </div>
+
+            <!-- مشغل البث المباشر -->
+            <div class="live-player" id="live-player" style="display: none;">
+                <div class="player-header">
+                    <h3>🔴 البث المباشر</h3>
+                    <div class="player-controls">
+                        <button class="player-btn" onclick="toggleFullscreen()">⛶ ملء الشاشة</button>
+                        <button class="player-btn" onclick="refreshPlayer()">🔄 إعادة تحميل</button>
+                    </div>
+                </div>
+                <div class="player-container" id="player-container">
+                    <!-- سيتم إدراج المشغل هنا -->
+                </div>
+            </div>
+
+            <!-- إحصائيات المباراة -->
+            <div class="match-stats" id="match-stats" style="display: none;">
+                <h3>إحصائيات المباراة</h3>
+                <div class="stats-container" id="stats-container">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
+            </div>
+
+            <!-- أحداث المباراة -->
+            <div class="match-events" id="match-events" style="display: none;">
+                <h3>أحداث المباراة</h3>
+                <div class="events-container" id="events-container">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
+            </div>
+
+            <!-- رسالة خطأ -->
+            <div class="error-message" id="error-message" style="display: none;">
+                <h3>❌ حدث خطأ</h3>
+                <p id="error-text"></p>
+                <button onclick="location.reload()">إعادة المحاولة</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="live-match.js"></script>
+</body>
+</html>

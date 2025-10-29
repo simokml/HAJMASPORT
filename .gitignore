@@ -1,0 +1,51 @@
+# WordPress Core Files
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# Theme Development
+node_modules/
+.sass-cache/
+*.map
+*.log
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# Package Managers
+package-lock.json
+yarn.lock
+
+# Build Files
+dist/
+build/
+
+# Screenshots (will be added manually)
+screenshot.png

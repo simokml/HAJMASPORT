@@ -1,0 +1,54 @@
+{
+  "name": "hajmasport-wordpress-theme",
+  "version": "1.0.0",
+  "description": "قالب ووردبريس لعرض المباريات الرياضية المباشرة مع تصميم مستوحى من نتفليكس",
+  "main": "index.php",
+  "scripts": {
+    "dev": "echo 'Development mode - No build process required'",
+    "build": "echo 'Production build - No build process required'",
+    "lint": "echo 'Linting JavaScript files...'",
+    "test": "echo 'No tests specified'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/hajmasport.git"
+  },
+  "keywords": [
+    "wordpress",
+    "theme",
+    "sports",
+    "football",
+    "soccer",
+    "matches",
+    "live-streaming",
+    "netflix-style",
+    "rtl",
+    "arabic",
+    "responsive",
+    "dark-theme"
+  ],
+  "author": "HAJMASPORT Team",
+  "license": "GPL-2.0-or-later",
+  "bugs": {
+    "url": "https://github.com/username/hajmasport/issues"
+  },
+  "homepage": "https://github.com/username/hajmasport#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "devDependencies": {},
+  "dependencies": {},
+  "wordpress": {
+    "requires": "5.0",
+    "tested": "6.4",
+    "requires_php": "7.4",
+    "stable_tag": "1.0",
+    "text_domain": "hajmasport"
+  }
+}
