@@ -1,8 +1,8 @@
 {
-  "name": "hajmasport-wordpress-theme",
+  "name": "hajmasport-website",
   "version": "1.0.0",
-  "description": "قالب ووردبريس لعرض المباريات الرياضية المباشرة مع تصميم مستوحى من نتفليكس",
-  "main": "index.php",
+  "description": "موقع ويب لعرض المباريات الرياضية المباشرة مع تصميم مستوحى من نتفليكس",
+  "main": "live-match.html",
   "scripts": {
     "dev": "echo 'Development mode - No build process required'",
     "build": "echo 'Production build - No build process required'",
@@ -14,8 +14,7 @@
     "url": "git+https://github.com/username/hajmasport.git"
   },
   "keywords": [
-    "wordpress",
-    "theme",
+    "website",
     "sports",
     "football",
     "soccer",
@@ -25,7 +24,10 @@
     "rtl",
     "arabic",
     "responsive",
-    "dark-theme"
+    "dark-theme",
+    "html5",
+    "css3",
+    "javascript"
   ],
   "author": "HAJMASPORT Team",
   "license": "GPL-2.0-or-later",
@@ -44,11 +46,10 @@
   ],
   "devDependencies": {},
   "dependencies": {},
-  "wordpress": {
-    "requires": "5.0",
-    "tested": "6.4",
-    "requires_php": "7.4",
-    "stable_tag": "1.0",
-    "text_domain": "hajmasport"
+  "technologies": {
+    "html": "5",
+    "css": "3",
+    "javascript": "ES6+",
+    "api": "Sportmonks API v3"
   }
 }
