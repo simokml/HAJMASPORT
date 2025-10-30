@@ -1,94 +1,67 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HAJMASPORT - المباراة المباشرة</title>
-    <link rel="stylesheet" href="live-match.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<title>مباريات مباشرة</title>
+<style>
+  .match-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+  }
+</style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <h1>HAJMASPORT</h1>
-                <span>المباراة المباشرة</span>
-            </div>
-            <button class="close-btn" onclick="window.close()">✕</button>
-        </div>
-    </header>
 
-    <main class="main-content">
-        <div class="container">
-            <!-- معلومات المباراة -->
-            <div class="match-info" id="match-info">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل بيانات المباراة...</p>
-                </div>
-            </div>
+<h1>مباريات مباشرة</h1>
+<div id="matches-container"></div>
 
-            <!-- النتيجة المباشرة -->
-            <div class="live-score" id="live-score" style="display: none;">
-                <div class="team home-team">
-                    <div class="team-logo" id="home-logo"></div>
-                    <div class="team-name" id="home-name"></div>
-                    <div class="team-score" id="home-score">0</div>
-                </div>
-                
-                <div class="match-center">
-                    <div class="match-time" id="match-time">00:00</div>
-                    <div class="match-status" id="match-status">لم تبدأ</div>
-                    <div class="league-name" id="league-name"></div>
-                </div>
-                
-                <div class="team away-team">
-                    <div class="team-logo" id="away-logo"></div>
-                    <div class="team-name" id="away-name"></div>
-                    <div class="team-score" id="away-score">0</div>
-                </div>
-            </div>
+<script>
+  // مفتاح الـ API
+  const token = "nSdbfmPCP2V8KKQ0ODIjC4LvxQN1XTiskOCBQ7ouY0iCgbp4YeUYHfAflMEf";
 
-            <!-- مشغل البث المباشر -->
-            <div class="live-player" id="live-player" style="display: none;">
-                <div class="player-header">
-                    <h3>🔴 البث المباشر</h3>
-                    <div class="player-controls">
-                        <button class="player-btn" onclick="toggleFullscreen()">⛶ ملء الشاشة</button>
-                        <button class="player-btn" onclick="refreshPlayer()">🔄 إعادة تحميل</button>
-                    </div>
-                </div>
-                <div class="player-container" id="player-container">
-                    <!-- سيتم إدراج المشغل هنا -->
-                </div>
-            </div>
+  // عنوان الطلب من Sportmonks
+  const url = `https://api.sportmonks.com/v3/football/livescores?api_token=${token}`;
 
-            <!-- إحصائيات المباراة -->
-            <div class="match-stats" id="match-stats" style="display: none;">
-                <h3>إحصائيات المباراة</h3>
-                <div class="stats-container" id="stats-container">
-                    <!-- سيتم ملؤها بواسطة JavaScript -->
-                </div>
-            </div>
+  // الدالة التي تجلب المباريات وتعرضها
+  async function loadLiveMatches() {
+    const container = document.getElementById("matches-container");
+    container.innerHTML = "<p>جارِ تحميل المباريات...</p>";
 
-            <!-- أحداث المباراة -->
-            <div class="match-events" id="match-events" style="display: none;">
-                <h3>أحداث المباراة</h3>
-                <div class="events-container" id="events-container">
-                    <!-- سيتم ملؤها بواسطة JavaScript -->
-                </div>
-            </div>
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
 
-            <!-- رسالة خطأ -->
-            <div class="error-message" id="error-message" style="display: none;">
-                <h3>❌ حدث خطأ</h3>
-                <p id="error-text"></p>
-                <button onclick="location.reload()">إعادة المحاولة</button>
-            </div>
-        </div>
-    </main>
+      const matches = data.data;
+      if (!matches || matches.length === 0) {
+        container.innerHTML = "<p>لا توجد مباريات مباشرة الآن.</p>";
+        return;
+      }
 
-    <script src="config.js"></script>
-    <script src="live-match.js"></script>
+      container.innerHTML = ""; // مسح النص السابق
+
+      matches.forEach(match => {
+        const matchCard = document.createElement("div");
+        matchCard.className = "match-card";
+        matchCard.innerHTML = `
+        <h3>${match.name}</h3>
+        <p>الحالة: ${match.time?.status || "غير متوفرة"}</p>
+        <p>توقيت البداية: ${match.time?.starting_at?.time || "غير محدد"}</p>
+      `;
+        container.appendChild(matchCard);
+      });
+    } catch (error) {
+      console.error("خطأ أثناء جلب البيانات:", error);
+      container.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات.</p>";
+    }
+  }
+
+  // استدعاء الدالة عند تحميل الصفحة
+  loadLiveMatches();
+
+  // تحديث النتائج كل دقيقة
+  setInterval(loadLiveMatches, 60000);
+</script>
+
 </body>
 </html>
