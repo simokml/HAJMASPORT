@@ -1,59 +1,358 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>مباريات آرسنال وتشيلسي موسم 2016-2017</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مباريات كرة القدم - TheSportsDB</title>
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  h1 {
+    color: #1e3c72;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+  }
+
+  .search-section {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: bold;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: #1e3c72;
+  }
+
+  button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin-top: 10px;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  #matches-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+  }
+
   .match-card {
-    border: 1px solid #ccc;
-    padding: 10px;
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-right: 5px solid #1e3c72;
+  }
+
+  .match-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  .match-card h3 {
+    color: #1e3c72;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+
+  .match-info {
     margin: 10px 0;
+    color: #555;
+    font-size: 0.95em;
+  }
+
+  .match-info strong {
+    color: #333;
+  }
+
+  .score {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2a5298;
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    background: #f0f4f8;
+    border-radius: 8px;
+  }
+
+  .video-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+  }
+
+  .video-link:hover {
+    background: #c0392b;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    color: #1e3c72;
+    font-size: 1.2em;
+  }
+
+  .error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .no-results {
+    background: #fff3cd;
+    color: #856404;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .league-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    background: #27ae60;
+    color: white;
+    border-radius: 15px;
+    font-size: 0.85em;
+    margin-top: 5px;
+  }
+
+  @media (max-width: 768px) {
+    #matches-container {
+      grid-template-columns: 1fr;
+    }
+    
+    h1 {
+      font-size: 1.8em;
+    }
   }
 </style>
 </head>
 <body>
 
-<h1>مباريات آرسنال ضد تشيلسي - موسم 2016-2017</h1>
-<div id="matches-container"></div>
+<div class="container">
+  <header>
+    <h1>⚽ موقع المباريات الرياضية</h1>
+    <p>عرض نتائج وتفاصيل المباريات من TheSportsDB</p>
+  </header>
+
+  <div class="search-section">
+    <h2 style="margin-bottom: 20px; color: #1e3c72;">🔍 البحث عن المباريات</h2>
+    
+    <div class="input-group">
+      <label for="team1">الفريق الأول:</label>
+      <input type="text" id="team1" value="Arsenal" placeholder="مثال: Arsenal">
+    </div>
+
+    <div class="input-group">
+      <label for="team2">الفريق الثاني:</label>
+      <input type="text" id="team2" value="Chelsea" placeholder="مثال: Chelsea">
+    </div>
+
+    <div class="input-group">
+      <label for="season">الموسم:</label>
+      <select id="season">
+        <option value="2023-2024">2023-2024</option>
+        <option value="2022-2023">2022-2023</option>
+        <option value="2021-2022">2021-2022</option>
+        <option value="2020-2021">2020-2021</option>
+        <option value="2019-2020">2019-2020</option>
+        <option value="2018-2019">2018-2019</option>
+        <option value="2017-2018">2017-2018</option>
+        <option value="2016-2017" selected>2016-2017</option>
+        <option value="2015-2016">2015-2016</option>
+      </select>
+    </div>
+
+    <button onclick="searchMatches()">🔎 البحث عن المباريات</button>
+  </div>
+
+  <div id="matches-container"></div>
+</div>
 
 <script>
-  const url = "https://www.thesportsdb.com/api/v1/json/3/searchevents.php?e=Arsenal_vs_Chelsea&s=2016-2017";
+  // API Key من TheSportsDB
+  const API_KEY = '17a4ffebc735e0e01fa9fbada13e426ccf7f335aaca7d7cda3a6a9ee93cf28dc';
+  
+  // تحميل المباريات عند فتح الصفحة
+  window.onload = () => searchMatches();
 
-  async function loadMatchData() {
+  async function searchMatches() {
+    const team1 = document.getElementById('team1').value.trim();
+    const team2 = document.getElementById('team2').value.trim();
+    const season = document.getElementById('season').value;
+    
+    if (!team1 || !team2) {
+      showError('الرجاء إدخال أسماء الفريقين');
+      return;
+    }
+
+    // بناء رابط API
+    const searchQuery = `${team1}_vs_${team2}`;
+    const url = `https://www.thesportsdb.com/api/v1/json/${API_KEY}/searchevents.php?e=${searchQuery}&s=${season}`;
+
     const container = document.getElementById("matches-container");
-    container.innerHTML = "<p>جارِ تحميل بيانات المباريات...</p>";
+    container.innerHTML = '<div class="loading">⏳ جارِ تحميل بيانات المباريات...</div>';
 
     try {
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('فشل الاتصال بالخادم');
+      }
+      
       const data = await response.json();
-
       const events = data.event;
+
       if (!events || events.length === 0) {
-        container.innerHTML = "<p>لا توجد مباريات متاحة.</p>";
+        container.innerHTML = `
+          <div class="no-results">
+            <h3>😕 لا توجد مباريات</h3>
+            <p>لم يتم العثور على مباريات بين ${team1} و ${team2} في موسم ${season}</p>
+          </div>
+        `;
         return;
       }
 
-      container.innerHTML = ""; // مسح النص السابق
-      events.forEach(match => {
-        const matchCard = document.createElement("div");
-        matchCard.className = "match-card";
-        matchCard.innerHTML = `
-          <h3>${match.strEvent}</h3>
-          <p>الدوري: ${match.strLeague}</p>
-          <p>الموسم: ${match.strSeason}</p>
-          <p>النتيجة: ${match.intHomeScore} - ${match.intAwayScore}</p>
-          <p>التاريخ: ${match.dateEvent}</p>
-          ${match.strVideo ? `<a href="${match.strVideo}" target="_blank">فيديو المباراة</a>` : ""}
-        `;
-        container.appendChild(matchCard);
-      });
+      displayMatches(events);
+
     } catch (error) {
       console.error("خطأ أثناء جلب البيانات:", error);
-      container.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات.</p>";
+      showError('حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.');
     }
   }
 
-  window.onload = loadMatchData;
+  function displayMatches(events) {
+    const container = document.getElementById("matches-container");
+    container.innerHTML = "";
+
+    events.forEach(match => {
+      const matchCard = document.createElement("div");
+      matchCard.className = "match-card";
+      
+      const homeScore = match.intHomeScore || '?';
+      const awayScore = match.intAwayScore || '?';
+      
+      matchCard.innerHTML = `
+        <h3>🏆 ${match.strEvent || 'مباراة'}</h3>
+        
+        <div class="match-info">
+          <strong>🎯 الدوري:</strong> ${match.strLeague || 'غير محدد'}
+          <span class="league-badge">${match.strSeason || ''}</span>
+        </div>
+        
+        <div class="score">
+          ${homeScore} - ${awayScore}
+        </div>
+        
+        <div class="match-info">
+          <strong>📅 التاريخ:</strong> ${match.dateEvent || 'غير محدد'}
+        </div>
+        
+        ${match.strTime ? `
+          <div class="match-info">
+            <strong>⏰ الوقت:</strong> ${match.strTime}
+          </div>
+        ` : ''}
+        
+        ${match.strVenue ? `
+          <div class="match-info">
+            <strong>🏟️ الملعب:</strong> ${match.strVenue}
+          </div>
+        ` : ''}
+        
+        ${match.strVideo ? `
+          <a href="${match.strVideo}" target="_blank" class="video-link">
+            📹 شاهد المباراة
+          </a>
+        ` : ''}
+      `;
+      
+      container.appendChild(matchCard);
+    });
+  }
+
+  function showError(message) {
+    const container = document.getElementById("matches-container");
+    container.innerHTML = `
+      <div class="error">
+        <h3>❌ خطأ</h3>
+        <p>${message}</p>
+      </div>
+    `;
+  }
 </script>
 
 </body>
