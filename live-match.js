@@ -1,16 +1,169 @@
+// إعدادات API
+const API_KEY = '2f4faafeb7ee476096624ffc016f9d72';
+const API_BASE_URL = 'https://api.football-data.org/v4';
+
 // التحقق من نوع الصفحة
 function isHomePage() {
     return !window.location.search.includes('fixture=');
 }
 
-// بيانات احتياطية للصفحة الرئيسية
-function getHomePageData() {
+// جلب المباريات من API
+async function fetchFixtures(date = null) {
+    try {
+        let url;
+        if (date) {
+            url = `${API_BASE_URL}/matches?dateFrom=${date}&dateTo=${date}`;
+        } else {
+            // جلب مباريات اليوم
+            const today = new Date().toISOString().split('T')[0];
+            url = `${API_BASE_URL}/matches?dateFrom=${today}&dateTo=${today}`;
+        }
+
+        const response = await fetch(url, {
+            headers: {
+                'X-Auth-Token': API_KEY
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.matches || [];
+    } catch (error) {
+        console.error('خطأ في جلب المباريات:', error);
+        return [];
+    }
+}
+
+// جلب المباريات المباشرة
+async function fetchLiveFixtures() {
+    try {
+        const url = `${API_BASE_URL}/matches?status=LIVE`;
+
+        const response = await fetch(url, {
+            headers: {
+                'X-Auth-Token': API_KEY
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.matches || [];
+    } catch (error) {
+        console.error('خطأ في جلب المباريات المباشرة:', error);
+        return [];
+    }
+}
+
+// تحويل بيانات API إلى تنسيق الموقع
+function formatFixtureData(match) {
+    if (!match.homeTeam || !match.awayTeam) {
+        return null;
+    }
+
+    // ترجمة أسماء الفرق
+    const homeTeamName = translateTeamName(match.homeTeam.name);
+    const awayTeamName = translateTeamName(match.awayTeam.name);
+
+    // الحصول على النتيجة
+    const homeScore = match.score?.fullTime?.home || 0;
+    const awayScore = match.score?.fullTime?.away || 0;
+
+    // تحديد حالة المباراة
+    let status = 'لم تبدأ';
+    let statusClass = 'not-started';
+
+    switch (match.status) {
+        case 'LIVE':
+        case 'IN_PLAY':
+        case 'PAUSED':
+            status = 'مباشر';
+            statusClass = 'live';
+            break;
+        case 'FINISHED':
+            status = 'انتهت';
+            statusClass = 'finished';
+            break;
+        case 'POSTPONED':
+            status = 'مؤجلة';
+            statusClass = 'postponed';
+            break;
+        case 'CANCELLED':
+            status = 'ملغية';
+            statusClass = 'cancelled';
+            break;
+        case 'SCHEDULED':
+        case 'TIMED':
+            status = 'لم تبدأ';
+            statusClass = 'not-started';
+            break;
+        default:
+            status = match.status;
+            statusClass = 'unknown';
+    }
+
+    // تنسيق الوقت
+    const matchTime = new Date(match.utcDate).toLocaleTimeString('ar-SA', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    return {
+        fixtureId: match.id.toString(),
+        homeTeam: homeTeamName,
+        awayTeam: awayTeamName,
+        homeScore: homeScore,
+        awayScore: awayScore,
+        status: status,
+        statusClass: statusClass,
+        league: match.competition?.name || 'دوري غير محدد',
+        channel: 'beIN Sports HD',
+        time: matchTime
+    };
+}
+
+// جلب بيانات الصفحة الرئيسية من API
+async function getHomePageData() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // جلب المباريات المباشرة
+        const liveFixtures = await fetchLiveFixtures();
+        const liveMatches = liveFixtures.map(formatFixtureData).filter(Boolean);
+
+        // جلب مباريات اليوم
+        const todayFixtures = await fetchFixtures(today);
+        const todayMatches = todayFixtures.map(formatFixtureData).filter(Boolean);
+
+        // جلب مباريات الغد
+        const tomorrowFixtures = await fetchFixtures(tomorrow);
+        const tomorrowMatches = tomorrowFixtures.map(formatFixtureData).filter(Boolean);
+
+        return {
+            live: liveMatches,
+            today: todayMatches,
+            tomorrow: tomorrowMatches
+        };
+    } catch (error) {
+        console.error('خطأ في جلب بيانات الصفحة الرئيسية:', error);
+        return getFallbackData();
+    }
+}
+
+// بيانات احتياطية في حالة فشل API
+function getFallbackData() {
     return {
         today: [
             {
                 fixtureId: "19439347",
                 homeTeam: "ريال مدريد",
-                awayTeam: "برشلونة", 
+                awayTeam: "برشلونة",
                 homeScore: 2,
                 awayScore: 1,
                 status: "انتهت",
@@ -96,107 +249,127 @@ function getFixtureIdFromUrl() {
 // دالة لجلب بيانات المباراة المباشرة
 async function fetchLiveMatchData(fixtureId) {
     try {
-        const apiUrl = `${API_CONFIG.baseUrl}/football/fixtures/${fixtureId}?api_token=${API_CONFIG.apiKey}&include=participants,league,scores,state,events,statistics`;
+        const apiUrl = `${API_BASE_URL}/matches/${fixtureId}`;
         console.log('رابط API للمباراة:', apiUrl);
         console.log('معرف المباراة:', fixtureId);
-        
-        const response = await fetch(apiUrl);
-        
+
+        const response = await fetch(apiUrl, {
+            headers: {
+                'X-Auth-Token': API_KEY
+            }
+        });
+
         console.log('حالة الاستجابة:', response.status);
-        
+
         if (!response.ok) {
             if (response.status === 404) {
                 throw new Error('المباراة غير موجودة أو معرف المباراة غير صحيح');
             } else if (response.status === 401) {
                 throw new Error('مفتاح API غير صحيح أو منتهي الصلاحية');
+            } else if (response.status === 403) {
+                throw new Error('الوصول مرفوض - تحقق من صلاحيات API');
             } else if (response.status === 429) {
-                throw new Error('تم تجاوز حد الطلبات المسموح به');
+                throw new Error('تم تجاوز حد الطلبات المسموح به - يرجى المحاولة لاحقاً');
+            } else if (response.status >= 500) {
+                throw new Error('خطأ في خادم Football-Data.org - يرجى المحاولة لاحقاً');
             } else {
-                throw new Error(`خطأ في الخادم: ${response.status}`);
+                throw new Error(`خطأ في الاتصال: ${response.status}`);
             }
         }
-        
+
         const data = await response.json();
         console.log('بيانات المباراة المباشرة:', data);
-        
-        if (data && data.data) {
-            displayLiveMatch(data.data);
-        } else if (data && data.error) {
-            throw new Error(`خطأ من API: ${data.error}`);
+
+        if (data) {
+            displayLiveMatch(data);
         } else {
-            throw new Error('لا توجد بيانات للمباراة أو تنسيق البيانات غير صحيح');
+            throw new Error('لا توجد بيانات للمباراة');
         }
-        
+
     } catch (error) {
         console.error('خطأ في جلب بيانات المباراة:', error);
-        
-        // إذا كانت المباراة من البيانات الاحتياطية، عرض بيانات تجريبية
-        if (fixtureId.startsWith('demo-') || ['19439347', '19439356', '19573385', '19439468', '19439384', '19439403', '19568579'].includes(fixtureId)) {
-            displayDemoMatch(fixtureId);
-        } else {
-            showError('فشل في تحميل بيانات المباراة: ' + error.message);
-        }
+        showError('فشل في تحميل بيانات المباراة: ' + error.message);
     }
 }
 
 // دالة لعرض بيانات المباراة المباشرة
-function displayLiveMatch(fixture) {
+function displayLiveMatch(match) {
     // إخفاء شاشة التحميل
     document.getElementById('match-info').style.display = 'none';
-    
+
     // عرض النتيجة المباشرة
     const liveScore = document.getElementById('live-score');
     liveScore.style.display = 'flex';
-    
+
     // إضافة المشغل للمباريات المحددة
-    addLivePlayer(fixture.id);
-    
-    // الحصول على بيانات الفرق
-    const homeTeam = fixture.participants?.find(p => p.meta?.location === 'home');
-    const awayTeam = fixture.participants?.find(p => p.meta?.location === 'away');
-    
-    if (!homeTeam || !awayTeam) {
+    addLivePlayer(match.id);
+
+    // التحقق من وجود بيانات الفرق
+    if (!match.homeTeam || !match.awayTeam) {
         showError('بيانات الفرق غير متوفرة');
         return;
     }
-    
+
     // عرض معلومات الفرق
-    document.getElementById('home-logo').textContent = homeTeam.name.charAt(0);
-    document.getElementById('home-name').textContent = translateTeamName(homeTeam.name);
-    document.getElementById('away-logo').textContent = awayTeam.name.charAt(0);
-    document.getElementById('away-name').textContent = translateTeamName(awayTeam.name);
-    
+    document.getElementById('home-logo').textContent = match.homeTeam.name.charAt(0);
+    document.getElementById('home-name').textContent = translateTeamName(match.homeTeam.name);
+    document.getElementById('away-logo').textContent = match.awayTeam.name.charAt(0);
+    document.getElementById('away-name').textContent = translateTeamName(match.awayTeam.name);
+
     // عرض النتيجة
-    const homeScore = getParticipantScore(fixture.scores, homeTeam.id);
-    const awayScore = getParticipantScore(fixture.scores, awayTeam.id);
-    
+    const homeScore = match.score?.fullTime?.home || 0;
+    const awayScore = match.score?.fullTime?.away || 0;
+
     document.getElementById('home-score').textContent = homeScore;
     document.getElementById('away-score').textContent = awayScore;
-    
+
     // عرض حالة المباراة
-    const matchStatus = getMatchStatusFromStateId(fixture.state_id);
+    let statusText = 'لم تبدأ';
+    switch (match.status) {
+        case 'LIVE':
+        case 'IN_PLAY':
+            statusText = 'مباشر';
+            break;
+        case 'PAUSED':
+            statusText = 'استراحة';
+            break;
+        case 'FINISHED':
+            statusText = 'انتهت';
+            break;
+        case 'POSTPONED':
+            statusText = 'مؤجلة';
+            break;
+        case 'CANCELLED':
+            statusText = 'ملغية';
+            break;
+        case 'SCHEDULED':
+        case 'TIMED':
+            statusText = 'لم تبدأ';
+            break;
+    }
+
     const statusElement = document.getElementById('match-status');
-    statusElement.textContent = matchStatus.text;
+    statusElement.textContent = statusText;
     statusElement.className = `match-status ${matchStatus.class}`;
-    
+
     // عرض وقت المباراة
-    document.getElementById('match-time').textContent = 
+    document.getElementById('match-time').textContent =
         formatMatchTimeFromTimestamp(fixture.starting_at, fixture.state_id);
-    
+
     // عرض اسم الدوري
-    document.getElementById('league-name').textContent = 
+    document.getElementById('league-name').textContent =
         fixture.league?.name || 'دوري غير محدد';
-    
+
     // عرض الإحصائيات إذا كانت متوفرة
     if (fixture.statistics && fixture.statistics.length > 0) {
         displayMatchStatistics(fixture.statistics);
     }
-    
+
     // عرض أحداث المباراة إذا كانت متوفرة
     if (fixture.events && fixture.events.length > 0) {
         displayMatchEvents(fixture.events);
     }
-    
+
     // تحديث عنوان الصفحة
     document.title = `${translateTeamName(homeTeam.name)} vs ${translateTeamName(awayTeam.name)} - HAJMASPORT`;
 }
@@ -205,12 +378,12 @@ function displayLiveMatch(fixture) {
 function displayMatchStatistics(statistics) {
     const statsContainer = document.getElementById('stats-container');
     const matchStats = document.getElementById('match-stats');
-    
+
     if (statistics.length === 0) return;
-    
+
     matchStats.style.display = 'block';
     statsContainer.innerHTML = '';
-    
+
     // تجميع الإحصائيات حسب النوع
     const statsByType = {};
     statistics.forEach(stat => {
@@ -219,12 +392,12 @@ function displayMatchStatistics(statistics) {
         }
         statsByType[stat.type?.name][stat.participant_id] = stat.data?.value || 0;
     });
-    
+
     // عرض الإحصائيات
     Object.entries(statsByType).forEach(([statName, values]) => {
         const statItem = document.createElement('div');
         statItem.className = 'stat-item';
-        
+
         const participantIds = Object.keys(values);
         if (participantIds.length >= 2) {
             statItem.innerHTML = `
@@ -241,23 +414,23 @@ function displayMatchStatistics(statistics) {
 function displayMatchEvents(events) {
     const eventsContainer = document.getElementById('events-container');
     const matchEvents = document.getElementById('match-events');
-    
+
     if (events.length === 0) return;
-    
+
     matchEvents.style.display = 'block';
     eventsContainer.innerHTML = '';
-    
+
     // ترتيب الأحداث حسب الوقت
     events.sort((a, b) => (b.minute || 0) - (a.minute || 0));
-    
+
     events.forEach(event => {
         const eventItem = document.createElement('div');
         eventItem.className = 'event-item';
-        
+
         const eventIcon = getEventIcon(event.type?.name);
         const eventTime = event.minute ? `${event.minute}'` : '--';
         const playerName = event.player?.name || 'لاعب غير محدد';
-        
+
         eventItem.innerHTML = `
             <div class="event-time">${eventTime}</div>
             <div class="event-icon">${eventIcon}</div>
@@ -266,7 +439,7 @@ function displayMatchEvents(events) {
                 <div>${translateEventType(event.type?.name)}</div>
             </div>
         `;
-        
+
         eventsContainer.appendChild(eventItem);
     });
 }
@@ -350,50 +523,50 @@ function displayDemoMatch(fixtureId) {
             time: 'الدقيقة 75'
         }
     };
-    
+
     const match = demoMatches[fixtureId];
     if (!match) {
         showError('مباراة تجريبية غير متوفرة');
         return;
     }
-    
+
     // إخفاء شاشة التحميل
     document.getElementById('match-info').style.display = 'none';
-    
+
     // عرض النتيجة المباشرة
     const liveScore = document.getElementById('live-score');
     liveScore.style.display = 'flex';
-    
+
     // إضافة المشغل للمباريات المحددة
     addLivePlayer(fixtureId);
-    
+
     // عرض معلومات الفرق
     document.getElementById('home-logo').textContent = match.homeTeam.shortName.charAt(0);
     document.getElementById('home-name').textContent = match.homeTeam.shortName;
     document.getElementById('away-logo').textContent = match.awayTeam.shortName.charAt(0);
     document.getElementById('away-name').textContent = match.awayTeam.shortName;
-    
+
     // عرض النتيجة
     document.getElementById('home-score').textContent = match.homeScore;
     document.getElementById('away-score').textContent = match.awayScore;
-    
+
     // عرض حالة المباراة
     const statusElement = document.getElementById('match-status');
     statusElement.textContent = match.status;
     statusElement.className = `match-status ${match.statusClass}`;
-    
+
     // عرض وقت المباراة
     document.getElementById('match-time').textContent = match.time;
-    
+
     // عرض اسم الدوري
     document.getElementById('league-name').textContent = match.league;
-    
+
     // تحديث عنوان الصفحة
     document.title = `${match.homeTeam.shortName} vs ${match.awayTeam.shortName} - HAJMASPORT`;
-    
+
     // عرض إحصائيات تجريبية
     displayDemoStats();
-    
+
     // عرض أحداث تجريبية
     displayDemoEvents(match);
 }
@@ -402,7 +575,7 @@ function displayDemoMatch(fixtureId) {
 function displayDemoStats() {
     const statsContainer = document.getElementById('stats-container');
     const matchStats = document.getElementById('match-stats');
-    
+
     matchStats.style.display = 'block';
     statsContainer.innerHTML = `
         <div class="stat-item">
@@ -432,9 +605,9 @@ function displayDemoStats() {
 function displayDemoEvents(match) {
     const eventsContainer = document.getElementById('events-container');
     const matchEvents = document.getElementById('match-events');
-    
+
     matchEvents.style.display = 'block';
-    
+
     const events = [
         { minute: 75, icon: '⚽', player: 'كريم بنزيما', event: 'هدف' },
         { minute: 68, icon: '🔄', player: 'لوكا مودريتش', event: 'تبديل' },
@@ -442,7 +615,7 @@ function displayDemoEvents(match) {
         { minute: 32, icon: '🟨', player: 'كاسيميرو', event: 'بطاقة صفراء' },
         { minute: 15, icon: '⚽', player: 'أنطوان جريزمان', event: 'هدف' }
     ];
-    
+
     eventsContainer.innerHTML = '';
     events.forEach(event => {
         const eventItem = document.createElement('div');
@@ -465,7 +638,7 @@ function showError(message) {
     document.getElementById('live-score').style.display = 'none';
     document.getElementById('match-stats').style.display = 'none';
     document.getElementById('match-events').style.display = 'none';
-    
+
     const errorElement = document.getElementById('error-message');
     document.getElementById('error-text').textContent = message;
     errorElement.style.display = 'block';
@@ -492,7 +665,7 @@ function translateTeamName(teamName) {
         'Atletico Madrid': 'أتلتيكو مدريد',
         'Valencia': 'فالنسيا'
     };
-    
+
     const translations = (typeof TEAM_TRANSLATIONS !== 'undefined') ? TEAM_TRANSLATIONS : defaultTranslations;
     return translations[teamName] || teamName;
 }
@@ -500,12 +673,12 @@ function translateTeamName(teamName) {
 // دالة للحصول على نتيجة المشارك (نفس الدالة من الملف الرئيسي)
 function getParticipantScore(scores, participantId) {
     if (!scores || scores.length === 0) return 0;
-    
-    const currentScore = scores.find(s => 
-        s.participant_id === participantId && 
+
+    const currentScore = scores.find(s =>
+        s.participant_id === participantId &&
         s.type_id === 1525
     );
-    
+
     return currentScore ? currentScore.score.goals : 0;
 }
 
@@ -520,14 +693,14 @@ function getMatchStatusFromStateId(stateId) {
         6: { text: 'مؤجلة', class: 'upcoming' },
         7: { text: 'ملغية', class: 'finished' }
     };
-    
+
     return statusMap[stateId] || { text: 'غير محدد', class: 'upcoming' };
 }
 
 // دالة لتنسيق وقت المباراة (نفس الدالة من الملف الرئيسي)
 function formatMatchTimeFromTimestamp(startingAt, stateId) {
     const matchDate = new Date(startingAt);
-    
+
     if (stateId === 2 || stateId === 3) {
         return 'مباشر الآن';
     } else if (stateId === 4) {
@@ -535,10 +708,10 @@ function formatMatchTimeFromTimestamp(startingAt, stateId) {
     } else if (stateId === 5) {
         return 'انتهت';
     } else {
-        return matchDate.toLocaleTimeString('ar-SA', { 
-            hour: '2-digit', 
+        return matchDate.toLocaleTimeString('ar-SA', {
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: false 
+            hour12: false
         });
     }
 }
@@ -547,10 +720,10 @@ function formatMatchTimeFromTimestamp(startingAt, stateId) {
 function addLivePlayer(fixtureId) {
     const livePlayer = document.getElementById('live-player');
     const playerContainer = document.getElementById('player-container');
-    
+
     // عرض المشغل
     livePlayer.style.display = 'block';
-    
+
     // إضافة الكتابة المتحركة
     playerContainer.innerHTML = `
         <div class="coming-soon-player">
@@ -566,21 +739,43 @@ function addLivePlayer(fixtureId) {
 
 
 // وظائف الصفحة الرئيسية
-function setupHomePage() {
-    const matchesData = getHomePageData();
-    
-    // عرض الصفحة الرئيسية افتراضياً
-    displayHomeContent(matchesData);
-    
-    // تحميل الأخبار مسبقاً (حتى لو لم تكن مرئية)
-    displayNews();
-    
-    // إعداد التبويبات
-    setupHomeTabs(matchesData);
-    
-    // إعداد النقر على المباريات
-    setupMatchClicks();
-    
+async function setupHomePage() {
+    // إظهار شاشة تحميل
+    showLoadingState();
+
+    // إظهار رسالة أن النظام يستخدم بيانات حقيقية
+    console.log('🔴 النظام يستخدم الآن البيانات الحقيقية من Football-Data.org API');
+
+    try {
+        const matchesData = await getEnhancedHomePageData();
+
+        // عرض الصفحة الرئيسية افتراضياً
+        displayHomeContent(matchesData);
+
+        // تحميل الأخبار مسبقاً (حتى لو لم تكن مرئية)
+        displayNews();
+
+        // إعداد التبويبات
+        setupHomeTabs(matchesData);
+
+        // إعداد النقر على المباريات
+        setupMatchClicks();
+
+        // إخفاء شاشة التحميل
+        hideLoadingState();
+
+        // تحديث البيانات كل 30 ثانية
+        setInterval(async () => {
+            const updatedData = await getEnhancedHomePageData();
+            updateCurrentView(updatedData);
+        }, 30000);
+
+    } catch (error) {
+        console.error('خطأ في إعداد الصفحة الرئيسية:', error);
+        hideLoadingState();
+        showErrorState();
+    }
+
     // تحديث الأخبار كل 10 ثوان للتأكد من ظهور المقالات الجديدة
     setInterval(() => {
         // تحديث الأخبار فقط إذا كان تبويب الأخبار مرئي
@@ -589,12 +784,12 @@ function setupHomePage() {
             displayNews();
         }
     }, 10000);
-    
+
     // تحديث الأخبار عند العودة للصفحة (مثل العودة من صفحة المسؤول)
     window.addEventListener('focus', () => {
         displayNews();
     });
-    
+
     // مراقبة تحديثات الأخبار من لوحة التحكم
     let lastNewsUpdate = localStorage.getItem('news_updated') || '0';
     setInterval(() => {
@@ -611,16 +806,16 @@ function setupHomePage() {
 function displayHomeMatches(tabName, matchesData) {
     const container = document.getElementById('matches-container');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     const matches = matchesData[tabName] || [];
-    
+
     if (matches.length === 0) {
         container.innerHTML = '<div style="padding: 40px; text-align: center; color: #b3b3b3;">لا توجد مباريات في هذا القسم</div>';
         return;
     }
-    
+
     matches.forEach(match => {
         const matchCard = createHomeMatchCard(match);
         container.appendChild(matchCard);
@@ -632,10 +827,10 @@ function createHomeMatchCard(match) {
     matchCard.className = 'match-card';
     matchCard.style.cursor = 'pointer';
     matchCard.setAttribute('data-fixture-id', match.fixtureId);
-    
+
     const homeTeamInitial = match.homeTeam.charAt(0);
     const awayTeamInitial = match.awayTeam.charAt(0);
-    
+
     matchCard.innerHTML = `
         <div class="team-home">
             <div class="team-logo">${homeTeamInitial}</div>
@@ -666,17 +861,17 @@ function createHomeMatchCard(match) {
             </div>
         </div>
     `;
-    
+
     return matchCard;
 }
 
 // عرض محتوى الصفحة الرئيسية
 function displayHomeContent(matchesData) {
     showHomeSection();
-    
+
     // عرض أحدث المباريات (مزيج من جميع الأقسام)
     displayHomeMatches(matchesData);
-    
+
     // عرض أحدث الأخبار
     displayHomeNews();
 }
@@ -690,16 +885,16 @@ function showHomeSection() {
 function displayHomeMatches(matchesData) {
     const container = document.getElementById('home-matches-container');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     // جمع أحدث المباريات من جميع الأقسام
     const allMatches = [
         ...(matchesData.live || []),
         ...(matchesData.today || []),
         ...(matchesData.tomorrow || [])
     ];
-    
+
     // عرض أول 6 مباريات
     allMatches.slice(0, 6).forEach(match => {
         const matchCard = createHomeMatchCard(match);
@@ -710,12 +905,12 @@ function displayHomeMatches(matchesData) {
 function displayHomeNews() {
     const container = document.getElementById('home-news-container');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     // الحصول على المقالات من التخزين المحلي
     const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
-    
+
     if (articles.length === 0) {
         container.innerHTML = `
             <div style="padding: 20px; text-align: center; color: #b3b3b3; grid-column: 1 / -1;">
@@ -725,7 +920,7 @@ function displayHomeNews() {
         `;
         return;
     }
-    
+
     // عرض أول 4 مقالات
     articles.slice(0, 4).forEach(article => {
         const newsCard = createHomeNewsCard(article);
@@ -738,7 +933,7 @@ function createHomeMatchCard(match) {
     matchCard.className = 'home-match-card';
     matchCard.style.cursor = 'pointer';
     matchCard.setAttribute('data-fixture-id', match.fixtureId);
-    
+
     matchCard.innerHTML = `
         <div class="home-match-header">
             <div class="home-match-league">🏆 ${match.league}</div>
@@ -751,7 +946,7 @@ function createHomeMatchCard(match) {
         </div>
         <div class="home-match-status">${match.status}</div>
     `;
-    
+
     return matchCard;
 }
 
@@ -759,9 +954,9 @@ function createHomeNewsCard(article) {
     const newsCard = document.createElement('div');
     newsCard.className = 'home-news-card';
     newsCard.style.cursor = 'pointer';
-    
+
     const articleDate = new Date(article.date).toLocaleDateString('ar-SA');
-    
+
     newsCard.innerHTML = `
         <div class="home-news-title">${article.title}</div>
         <div class="home-news-meta">
@@ -770,28 +965,28 @@ function createHomeNewsCard(article) {
         </div>
         <div class="home-news-excerpt">${article.excerpt}</div>
     `;
-    
+
     // إضافة حدث النقر لفتح المقال
     newsCard.addEventListener('click', () => {
         openArticleModal(article);
     });
-    
+
     return newsCard;
 }
 
 function setupHomeTabs(matchesData) {
     const tabButtons = document.querySelectorAll('.tab-btn');
-    
+
     tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', async () => {
             // إزالة الفئة النشطة من جميع الأزرار
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            
+
             // إضافة الفئة النشطة للزر المضغوط
             button.classList.add('active');
-            
+
             const tabName = button.getAttribute('data-tab');
-            
+
             if (tabName === 'home') {
                 // عرض الصفحة الرئيسية
                 displayHomeContent(matchesData);
@@ -801,9 +996,22 @@ function setupHomeTabs(matchesData) {
                 // تحديث الأخبار في كل مرة يتم النقر على التبويب
                 setTimeout(() => displayNews(), 100);
             } else {
-                // عرض المباريات
+                // عرض المباريات - جلب بيانات محدثة
                 showMatchesSection();
-                displayHomeMatches(tabName, matchesData);
+
+                // إظهار شاشة تحميل صغيرة
+                const container = document.getElementById('matches-container');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #b3b3b3;"><div class="loading-spinner" style="margin: 0 auto 15px auto; width: 30px; height: 30px; border: 3px solid #333; border-top: 3px solid #e50914; border-radius: 50%; animation: spin 1s linear infinite;"></div>جاري تحميل المباريات...</div>';
+                }
+
+                try {
+                    const updatedData = await getEnhancedHomePageData();
+                    displayHomeMatches(tabName, updatedData);
+                } catch (error) {
+                    console.error('خطأ في تحديث المباريات:', error);
+                    displayHomeMatches(tabName, matchesData); // استخدام البيانات المحفوظة
+                }
             }
         });
     });
@@ -828,15 +1036,15 @@ function showNewsSection() {
 function displayNews() {
     const container = document.getElementById('news-container');
     if (!container) return;
-    
+
     // الحصول على المقالات من التخزين المحلي
     const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
-    
+
     // تسجيل للتشخيص
     console.log('عدد المقالات المحفوظة:', articles.length);
-    
+
     container.innerHTML = '';
-    
+
     if (articles.length === 0) {
         container.innerHTML = `
             <div style="padding: 40px; text-align: center; color: #b3b3b3;">
@@ -847,7 +1055,7 @@ function displayNews() {
         `;
         return;
     }
-    
+
     // عرض آخر 10 مقالات
     articles.slice(0, 10).forEach(article => {
         const newsCard = createNewsCard(article);
@@ -860,10 +1068,10 @@ function createNewsCard(article) {
     const newsCard = document.createElement('div');
     newsCard.className = 'news-card';
     newsCard.style.cursor = 'pointer';
-    
+
     const articleDate = new Date(article.date).toLocaleDateString('ar-SA');
     const defaultImage = 'https://via.placeholder.com/120x80/333333/e50914?text=📰';
-    
+
     newsCard.innerHTML = `
         <div class="news-image">
             <img src="${article.image || defaultImage}" alt="${article.title}" onerror="this.src='${defaultImage}'">
@@ -878,12 +1086,12 @@ function createNewsCard(article) {
             </div>
         </div>
     `;
-    
+
     // إضافة حدث النقر لعرض المقال كاملاً
     newsCard.addEventListener('click', () => {
         showFullArticle(article);
     });
-    
+
     return newsCard;
 }
 
@@ -895,10 +1103,10 @@ function showFullArticle(article) {
         background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto;
         display: flex; align-items: center; justify-content: center; padding: 20px;
     `;
-    
+
     const articleDate = new Date(article.date).toLocaleDateString('ar-SA');
     const defaultImage = 'https://via.placeholder.com/600x300/333333/e50914?text=📰+' + encodeURIComponent(article.title);
-    
+
     modal.innerHTML = `
         <div style="background: #1f1f1f; padding: 30px; border-radius: 15px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -923,13 +1131,13 @@ function showFullArticle(article) {
             </div>
         </div>
     `;
-    
+
     modal.className = 'modal';
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
-    
+
     // إغلاق النافذة عند النقر خارجها
-    modal.addEventListener('click', function(e) {
+    modal.addEventListener('click', function (e) {
         if (e.target === this) {
             this.remove();
             document.body.style.overflow = 'auto';
@@ -946,7 +1154,7 @@ function setupMatchClicks() {
             setTimeout(() => {
                 matchCard.style.transform = 'scale(1)';
             }, 150);
-            
+
             // فتح صفحة المباراة المباشرة
             const fixtureId = matchCard.getAttribute('data-fixture-id');
             if (fixtureId) {
@@ -959,14 +1167,14 @@ function setupMatchClicks() {
 // تشغيل التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     const fixtureId = getFixtureIdFromUrl();
-    
+
     if (!fixtureId) {
         // الصفحة الرئيسية
         setupHomePage();
     } else {
         // صفحة المباراة المباشرة
         fetchLiveMatchData(fixtureId);
-        
+
         // تحديث البيانات كل 30 ثانية للمباريات المباشرة
         setInterval(() => {
             fetchLiveMatchData(fixtureId);
@@ -1001,14 +1209,14 @@ function openArticleModal(article) {
         `;
         document.body.appendChild(modal);
     }
-    
+
     // ملء البيانات
     document.getElementById('modal-article-title').textContent = article.title;
     document.getElementById('modal-article-category').textContent = `🏷️ ${article.category}`;
     document.getElementById('modal-article-date').textContent = `📅 ${new Date(article.date).toLocaleDateString('ar-SA')}`;
     document.getElementById('modal-article-author').textContent = `✍️ ${article.author}`;
     document.getElementById('modal-article-content').innerHTML = article.content.replace(/\n/g, '<br>');
-    
+
     // عرض الصورة إذا كانت موجودة
     const imageContainer = document.getElementById('modal-article-image');
     if (article.image && article.image.trim()) {
@@ -1016,13 +1224,13 @@ function openArticleModal(article) {
     } else {
         imageContainer.innerHTML = '';
     }
-    
+
     // إظهار النافذة
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    
+
     // إغلاق النافذة عند النقر خارجها
-    modal.onclick = function(e) {
+    modal.onclick = function (e) {
         if (e.target === modal) {
             closeArticleModal();
         }
@@ -1035,5 +1243,162 @@ function closeArticleModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+    }
+}
+
+// إظهار شاشة التحميل
+function showLoadingState() {
+    const container = document.querySelector('.container');
+    if (container) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-state';
+        loadingDiv.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: #ffffff;">
+                <div class="loading-spinner" style="margin: 0 auto 20px auto; width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #e50914; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <h3>جاري تحميل المباريات الحقيقية...</h3>
+                <p style="color: #b3b3b3; margin-top: 10px;">🔴 يتم جلب أحدث البيانات من Football-Data.org</p>
+                <p style="color: #e50914; margin-top: 5px; font-size: 12px;">البيانات محدثة تلقائياً كل 30 ثانية</p>
+            </div>
+        `;
+        container.appendChild(loadingDiv);
+    }
+}
+
+// إخفاء شاشة التحميل
+function hideLoadingState() {
+    const loadingDiv = document.getElementById('loading-state');
+    if (loadingDiv) {
+        loadingDiv.remove();
+    }
+}
+
+// إظهار شاشة الخطأ
+function showErrorState() {
+    const container = document.querySelector('.container');
+    if (container) {
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: #ffffff;">
+                <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                <h3>خطأ في تحميل البيانات</h3>
+                <p style="color: #b3b3b3; margin: 15px 0;">لا يمكن الاتصال بخادم البيانات حالياً</p>
+                <button onclick="location.reload()" style="background: #e50914; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px;">إعادة المحاولة</button>
+            </div>
+        `;
+        container.appendChild(errorDiv);
+    }
+}
+
+// تحديث العرض الحالي
+function updateCurrentView(matchesData) {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (!activeTab) return;
+
+    const tabName = activeTab.getAttribute('data-tab');
+
+    if (tabName === 'home') {
+        displayHomeContent(matchesData);
+    } else if (tabName === 'news') {
+        displayNews();
+    } else {
+        displayHomeMatches(tabName, matchesData);
+    }
+}
+
+// إضافة تنسيق CSS للتحميل
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
+// جلب مباريات الدوريات الشهيرة
+async function fetchPopularLeaguesMatches() {
+    const popularCompetitions = [
+        'PL',  // Premier League
+        'PD',  // La Liga
+        'BL1', // Bundesliga
+        'SA',  // Serie A
+        'FL1', // Ligue 1
+        'CL',  // Champions League
+        'EL'   // Europa League
+    ];
+
+    try {
+        const allMatches = [];
+
+        for (const competition of popularCompetitions) {
+            const url = `${API_BASE_URL}/competitions/${competition}/matches?status=SCHEDULED,LIVE,IN_PLAY,PAUSED,FINISHED`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'X-Auth-Token': API_KEY
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.matches) {
+                    allMatches.push(...data.matches);
+                }
+            }
+        }
+
+        return allMatches;
+    } catch (error) {
+        console.error('خطأ في جلب مباريات الدوريات الشهيرة:', error);
+        return [];
+    }
+}
+
+// تحسين دالة جلب البيانات لتشمل الدوريات الشهيرة
+async function getEnhancedHomePageData() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // جلب المباريات المباشرة
+        const liveFixtures = await fetchLiveFixtures();
+        const liveMatches = liveFixtures.map(formatFixtureData).filter(Boolean);
+
+        // جلب مباريات اليوم
+        const todayFixtures = await fetchFixtures(today);
+        const todayMatches = todayFixtures.map(formatFixtureData).filter(Boolean);
+
+        // جلب مباريات الغد
+        const tomorrowFixtures = await fetchFixtures(tomorrow);
+        const tomorrowMatches = tomorrowFixtures.map(formatFixtureData).filter(Boolean);
+
+        // إذا كانت البيانات قليلة، جلب من الدوريات الشهيرة
+        if (todayMatches.length < 5) {
+            const popularMatches = await fetchPopularLeaguesMatches();
+            const formattedPopular = popularMatches.map(formatFixtureData).filter(Boolean);
+
+            // فلترة مباريات اليوم والغد من الدوريات الشهيرة
+            const todayPopular = formattedPopular.filter(match => {
+                const matchDate = new Date(match.time).toISOString().split('T')[0];
+                return matchDate === today;
+            });
+
+            const tomorrowPopular = formattedPopular.filter(match => {
+                const matchDate = new Date(match.time).toISOString().split('T')[0];
+                return matchDate === tomorrow;
+            });
+
+            todayMatches.push(...todayPopular.slice(0, 10 - todayMatches.length));
+            tomorrowMatches.push(...tomorrowPopular.slice(0, 10 - tomorrowMatches.length));
+        }
+
+        return {
+            live: liveMatches,
+            today: todayMatches,
+            tomorrow: tomorrowMatches
+        };
+    } catch (error) {
+        console.error('خطأ في جلب البيانات المحسنة:', error);
+        return await getHomePageData(); // العودة للطريقة الأساسية
     }
 }
