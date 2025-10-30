@@ -23,6 +23,7 @@ function getArticles() {
 // حفظ المقالات في التخزين المحلي
 function saveArticles(articles) {
     localStorage.setItem('hajmasport_articles', JSON.stringify(articles));
+    console.log('تم حفظ', articles.length, 'مقال في التخزين المحلي');
 }
 
 // إضافة مقال جديد
@@ -38,10 +39,13 @@ function addArticle(articleData) {
         date: new Date().toISOString(),
         excerpt: articleData.content.substring(0, 150) + '...'
     };
-    
+
     articles.unshift(newArticle); // إضافة في البداية
     saveArticles(articles);
-    
+
+    // إشارة للصفحة الرئيسية لتحديث الأخبار
+    localStorage.setItem('news_updated', Date.now().toString());
+
     return newArticle;
 }
 
@@ -56,13 +60,13 @@ function deleteArticle(articleId) {
 function updateStats() {
     const articles = getArticles();
     const today = new Date().toDateString();
-    const todayArticles = articles.filter(article => 
+    const todayArticles = articles.filter(article =>
         new Date(article.date).toDateString() === today
     );
-    
+
     document.getElementById('total-articles').textContent = articles.length;
     document.getElementById('today-articles').textContent = todayArticles.length;
-    
+
     if (articles.length > 0) {
         const lastArticle = articles[0];
         const lastDate = new Date(lastArticle.date).toLocaleDateString('ar-SA');
@@ -74,20 +78,20 @@ function updateStats() {
 function displayArticles() {
     const articles = getArticles();
     const container = document.getElementById('articles-list');
-    
+
     if (articles.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #b3b3b3; padding: 20px;">لا توجد مقالات منشورة</p>';
         return;
     }
-    
+
     container.innerHTML = '';
-    
+
     articles.forEach(article => {
         const articleElement = document.createElement('div');
         articleElement.className = 'article-item';
-        
+
         const articleDate = new Date(article.date).toLocaleDateString('ar-SA');
-        
+
         articleElement.innerHTML = `
             <div class="article-info">
                 <h4>${article.title}</h4>
@@ -98,7 +102,7 @@ function displayArticles() {
                 <button class="btn btn-small btn-delete" onclick="deleteArticleConfirm(${article.id})">حذف</button>
             </div>
         `;
-        
+
         container.appendChild(articleElement);
     });
 }
@@ -130,7 +134,7 @@ function deleteArticleConfirm(articleId) {
 function editArticle(articleId) {
     const articles = getArticles();
     const article = articles.find(a => a.id === articleId);
-    
+
     if (article) {
         // ملء النموذج بالبيانات الحالية
         document.getElementById('article-title').value = article.title;
@@ -138,10 +142,10 @@ function editArticle(articleId) {
         document.getElementById('article-content').value = article.content;
         document.getElementById('article-image').value = article.image || '';
         document.getElementById('article-author').value = article.author;
-        
+
         // حذف المقال القديم عند الحفظ
         document.getElementById('article-form').setAttribute('data-edit-id', articleId);
-        
+
         openAddArticleModal();
     }
 }
@@ -156,8 +160,8 @@ function refreshStats() {
 function exportArticles() {
     const articles = getArticles();
     const dataStr = JSON.stringify(articles, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
     link.download = 'hajmasport-articles-' + new Date().toISOString().split('T')[0] + '.json';
@@ -165,18 +169,18 @@ function exportArticles() {
 }
 
 // معالجة نموذج إضافة المقال
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // التحقق من تسجيل الدخول
     if (!checkAuth()) return;
-    
+
     // تحديث الإحصائيات وعرض المقالات
     updateStats();
     displayArticles();
-    
+
     // معالجة نموذج إضافة المقال
-    document.getElementById('article-form').addEventListener('submit', function(e) {
+    document.getElementById('article-form').addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const formData = {
             title: document.getElementById('article-title').value,
             category: document.getElementById('article-category').value,
@@ -184,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             image: document.getElementById('article-image').value,
             author: document.getElementById('article-author').value
         };
-        
+
         // التحقق من التعديل
         const editId = this.getAttribute('data-edit-id');
         if (editId) {
@@ -192,20 +196,20 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteArticle(parseInt(editId));
             this.removeAttribute('data-edit-id');
         }
-        
+
         // إضافة المقال الجديد
         addArticle(formData);
-        
+
         // إغلاق النافذة وتحديث العرض
         closeAddArticleModal();
         displayArticles();
         updateStats();
-        
-        alert('تم حفظ المقال بنجاح! ✅');
+
+        alert('تم نشر المقال بنجاح! ✅\nالمقال متاح الآن للزوار في قسم الأخبار');
     });
-    
+
     // إغلاق النافذة عند النقر خارجها
-    document.getElementById('add-article-modal').addEventListener('click', function(e) {
+    document.getElementById('add-article-modal').addEventListener('click', function (e) {
         if (e.target === this) {
             closeAddArticleModal();
         }

@@ -569,16 +569,43 @@ function addLivePlayer(fixtureId) {
 function setupHomePage() {
     const matchesData = getHomePageData();
     
-
+    // عرض الصفحة الرئيسية افتراضياً
+    displayHomeContent(matchesData);
     
-    // عرض مباريات اليوم افتراضياً
-    displayHomeMatches('today', matchesData);
+    // تحميل الأخبار مسبقاً (حتى لو لم تكن مرئية)
+    displayNews();
     
     // إعداد التبويبات
     setupHomeTabs(matchesData);
     
     // إعداد النقر على المباريات
     setupMatchClicks();
+    
+    // تحديث الأخبار كل 10 ثوان للتأكد من ظهور المقالات الجديدة
+    setInterval(() => {
+        // تحديث الأخبار فقط إذا كان تبويب الأخبار مرئي
+        const newsSection = document.getElementById('news-section');
+        if (newsSection && newsSection.style.display !== 'none') {
+            displayNews();
+        }
+    }, 10000);
+    
+    // تحديث الأخبار عند العودة للصفحة (مثل العودة من صفحة المسؤول)
+    window.addEventListener('focus', () => {
+        displayNews();
+    });
+    
+    // مراقبة تحديثات الأخبار من لوحة التحكم
+    let lastNewsUpdate = localStorage.getItem('news_updated') || '0';
+    setInterval(() => {
+        const currentNewsUpdate = localStorage.getItem('news_updated') || '0';
+        if (currentNewsUpdate !== lastNewsUpdate) {
+            lastNewsUpdate = currentNewsUpdate;
+            displayNews();
+            // تحديث الأخبار في الصفحة الرئيسية أيضاً
+            displayHomeNews();
+        }
+    }, 2000);
 }
 
 function displayHomeMatches(tabName, matchesData) {
@@ -643,6 +670,115 @@ function createHomeMatchCard(match) {
     return matchCard;
 }
 
+// عرض محتوى الصفحة الرئيسية
+function displayHomeContent(matchesData) {
+    showHomeSection();
+    
+    // عرض أحدث المباريات (مزيج من جميع الأقسام)
+    displayHomeMatches(matchesData);
+    
+    // عرض أحدث الأخبار
+    displayHomeNews();
+}
+
+function showHomeSection() {
+    document.getElementById('home-section').style.display = 'block';
+    document.getElementById('matches-section').style.display = 'none';
+    document.getElementById('news-section').style.display = 'none';
+}
+
+function displayHomeMatches(matchesData) {
+    const container = document.getElementById('home-matches-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // جمع أحدث المباريات من جميع الأقسام
+    const allMatches = [
+        ...(matchesData.live || []),
+        ...(matchesData.today || []),
+        ...(matchesData.tomorrow || [])
+    ];
+    
+    // عرض أول 6 مباريات
+    allMatches.slice(0, 6).forEach(match => {
+        const matchCard = createHomeMatchCard(match);
+        container.appendChild(matchCard);
+    });
+}
+
+function displayHomeNews() {
+    const container = document.getElementById('home-news-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // الحصول على المقالات من التخزين المحلي
+    const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+    
+    if (articles.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #b3b3b3; grid-column: 1 / -1;">
+                <p>لا توجد أخبار منشورة</p>
+                <a href="admin-login.html" style="color: #e50914; text-decoration: none; font-size: 12px;">إضافة مقال</a>
+            </div>
+        `;
+        return;
+    }
+    
+    // عرض أول 4 مقالات
+    articles.slice(0, 4).forEach(article => {
+        const newsCard = createHomeNewsCard(article);
+        container.appendChild(newsCard);
+    });
+}
+
+function createHomeMatchCard(match) {
+    const matchCard = document.createElement('div');
+    matchCard.className = 'home-match-card';
+    matchCard.style.cursor = 'pointer';
+    matchCard.setAttribute('data-fixture-id', match.fixtureId);
+    
+    matchCard.innerHTML = `
+        <div class="home-match-header">
+            <div class="home-match-league">🏆 ${match.league}</div>
+            <div class="home-match-time">${match.time}</div>
+        </div>
+        <div class="home-match-teams">
+            <div class="home-team-name">${match.homeTeam}</div>
+            <div class="home-match-score">${match.homeScore} - ${match.awayScore}</div>
+            <div class="home-team-name">${match.awayTeam}</div>
+        </div>
+        <div class="home-match-status">${match.status}</div>
+    `;
+    
+    return matchCard;
+}
+
+function createHomeNewsCard(article) {
+    const newsCard = document.createElement('div');
+    newsCard.className = 'home-news-card';
+    newsCard.style.cursor = 'pointer';
+    
+    const articleDate = new Date(article.date).toLocaleDateString('ar-SA');
+    
+    newsCard.innerHTML = `
+        <div class="home-news-title">${article.title}</div>
+        <div class="home-news-meta">
+            <div class="home-news-category">🏷️ ${article.category}</div>
+            <div class="home-news-date">${articleDate}</div>
+        </div>
+        <div class="home-news-excerpt">${article.excerpt}</div>
+    `;
+    
+    // إضافة حدث النقر لفتح المقال
+    newsCard.addEventListener('click', () => {
+        openArticleModal(article);
+    });
+    
+    return newsCard;
+}
+
 function setupHomeTabs(matchesData) {
     const tabButtons = document.querySelectorAll('.tab-btn');
     
@@ -656,10 +792,14 @@ function setupHomeTabs(matchesData) {
             
             const tabName = button.getAttribute('data-tab');
             
-            if (tabName === 'news') {
+            if (tabName === 'home') {
+                // عرض الصفحة الرئيسية
+                displayHomeContent(matchesData);
+            } else if (tabName === 'news') {
                 // عرض الأخبار
                 showNewsSection();
-                displayNews();
+                // تحديث الأخبار في كل مرة يتم النقر على التبويب
+                setTimeout(() => displayNews(), 100);
             } else {
                 // عرض المباريات
                 showMatchesSection();
@@ -671,6 +811,7 @@ function setupHomeTabs(matchesData) {
 
 // عرض قسم المباريات
 function showMatchesSection() {
+    document.getElementById('home-section').style.display = 'none';
     document.getElementById('matches-section').style.display = 'block';
     document.getElementById('news-section').style.display = 'none';
     document.getElementById('section-title').textContent = 'جدول المباريات';
@@ -678,6 +819,7 @@ function showMatchesSection() {
 
 // عرض قسم الأخبار
 function showNewsSection() {
+    document.getElementById('home-section').style.display = 'none';
     document.getElementById('matches-section').style.display = 'none';
     document.getElementById('news-section').style.display = 'block';
 }
@@ -689,6 +831,9 @@ function displayNews() {
     
     // الحصول على المقالات من التخزين المحلي
     const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+    
+    // تسجيل للتشخيص
+    console.log('عدد المقالات المحفوظة:', articles.length);
     
     container.innerHTML = '';
     
@@ -828,3 +973,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 30000);
     }
 });
+
+// فتح نافذة عرض المقال
+function openArticleModal(article) {
+    // إنشاء النافذة إذا لم تكن موجودة
+    let modal = document.getElementById('article-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'article-modal';
+        modal.className = 'article-modal';
+        modal.innerHTML = `
+            <div class="article-modal-content">
+                <div class="article-modal-header">
+                    <h2 id="modal-article-title"></h2>
+                    <button class="close-modal" onclick="closeArticleModal()">×</button>
+                </div>
+                <div class="article-modal-meta">
+                    <span id="modal-article-category"></span>
+                    <span id="modal-article-date"></span>
+                    <span id="modal-article-author"></span>
+                </div>
+                <div class="article-modal-body">
+                    <div id="modal-article-image"></div>
+                    <div id="modal-article-content"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // ملء البيانات
+    document.getElementById('modal-article-title').textContent = article.title;
+    document.getElementById('modal-article-category').textContent = `🏷️ ${article.category}`;
+    document.getElementById('modal-article-date').textContent = `📅 ${new Date(article.date).toLocaleDateString('ar-SA')}`;
+    document.getElementById('modal-article-author').textContent = `✍️ ${article.author}`;
+    document.getElementById('modal-article-content').innerHTML = article.content.replace(/\n/g, '<br>');
+    
+    // عرض الصورة إذا كانت موجودة
+    const imageContainer = document.getElementById('modal-article-image');
+    if (article.image && article.image.trim()) {
+        imageContainer.innerHTML = `<img src="${article.image}" alt="${article.title}" style="width: 100%; max-width: 500px; height: auto; border-radius: 8px; margin-bottom: 20px;">`;
+    } else {
+        imageContainer.innerHTML = '';
+    }
+    
+    // إظهار النافذة
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // إغلاق النافذة عند النقر خارجها
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeArticleModal();
+        }
+    };
+}
+
+// إغلاق نافذة عرض المقال
+function closeArticleModal() {
+    const modal = document.getElementById('article-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}

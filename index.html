@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="live-match.css">
 </head>
+
 <body>
     <header class="header">
         <div class="container">
@@ -26,7 +28,8 @@
 
     <nav class="nav-tabs">
         <div class="container">
-            <button class="tab-btn active" data-tab="today">مباريات اليوم</button>
+            <button class="tab-btn active" data-tab="home">الرئيسية</button>
+            <button class="tab-btn" data-tab="today">مباريات اليوم</button>
             <button class="tab-btn" data-tab="live">مباريات مباشرة</button>
             <button class="tab-btn" data-tab="tomorrow">مباريات الغد</button>
             <button class="tab-btn" data-tab="news">الأخبار</button>
@@ -35,23 +38,44 @@
 
     <main class="main-content">
         <div class="container">
-
             
-            <div class="matches-section" id="matches-section">
+            <div class="home-section" id="home-section">
+                <div class="section-header">
+                    <h2>🏠 الصفحة الرئيسية</h2>
+                </div>
+                
+                <!-- أحدث المباريات -->
+                <div class="home-matches-section">
+                    <h3 class="subsection-title">⚽ أحدث المباريات</h3>
+                    <div class="home-matches-container" id="home-matches-container">
+                        <!-- أحدث المباريات ستُضاف هنا -->
+                    </div>
+                </div>
+                
+                <!-- أحدث الأخبار -->
+                <div class="home-news-section">
+                    <h3 class="subsection-title">📰 أحدث الأخبار</h3>
+                    <div class="home-news-container" id="home-news-container">
+                        <!-- أحدث الأخبار ستُضاف هنا -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="matches-section" id="matches-section" style="display: none;">
                 <div class="section-header">
                     <h2 id="section-title">جدول المباريات</h2>
                 </div>
-                
+
                 <div class="matches-container" id="matches-container">
                     <!-- المباريات ستُضاف هنا بواسطة JavaScript -->
                 </div>
             </div>
-            
+
             <div class="news-section" id="news-section" style="display: none;">
                 <div class="section-header">
                     <h2>آخر الأخبار الرياضية</h2>
                 </div>
-                
+
                 <div class="news-container" id="news-container">
                     <!-- الأخبار ستُضاف هنا بواسطة JavaScript -->
                 </div>
@@ -73,4 +97,5 @@
 
     <script src="live-match.js"></script>
 </body>
+
 </html>

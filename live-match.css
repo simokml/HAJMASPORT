@@ -853,4 +853,287 @@ body {
     .coming-soon-player {
         height: 300px;
     }
+}/* قسم 
+الرئيسية */
+.home-section {
+    display: block;
+}
+
+.subsection-title {
+    color: #e50914;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 30px 0 15px 0;
+    padding: 10px 15px;
+    background: linear-gradient(135deg, rgba(229, 9, 20, 0.1), rgba(229, 9, 20, 0.05));
+    border-right: 4px solid #e50914;
+    border-radius: 5px;
+}
+
+.home-matches-section,
+.home-news-section {
+    margin-bottom: 40px;
+}
+
+.home-matches-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.home-news-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+/* بطاقات مصغرة للمباريات في الرئيسية */
+.home-match-card {
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.home-match-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(229, 9, 20, 0.3);
+    border-color: #e50914;
+}
+
+.home-match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.home-match-league {
+    font-size: 12px;
+    color: #e50914;
+    font-weight: 600;
+}
+
+.home-match-time {
+    font-size: 11px;
+    color: #b3b3b3;
+}
+
+.home-match-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.home-team-name {
+    font-size: 14px;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.home-match-score {
+    font-size: 16px;
+    color: #e50914;
+    font-weight: 700;
+}
+
+.home-match-status {
+    text-align: center;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(229, 9, 20, 0.2);
+    color: #e50914;
+}
+
+/* بطاقات مصغرة للأخبار في الرئيسية */
+.home-news-card {
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.home-news-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(229, 9, 20, 0.3);
+    border-color: #e50914;
+}
+
+.home-news-title {
+    font-size: 14px;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.home-news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.home-news-category {
+    font-size: 11px;
+    color: #e50914;
+    font-weight: 600;
+}
+
+.home-news-date {
+    font-size: 10px;
+    color: #b3b3b3;
+}
+
+.home-news-excerpt {
+    font-size: 12px;
+    color: #b3b3b3;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* تجاوب مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .home-matches-container,
+    .home-news-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .subsection-title {
+        font-size: 18px;
+        margin: 20px 0 10px 0;
+    }
+}
+
+/* نافذة عرض المقال */
+.article-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.article-modal-content {
+    background: #1a1a1a;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+
+.article-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 20px 10px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.article-modal-header h2 {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+    margin-left: 15px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #e50914;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.close-modal:hover {
+    background: rgba(229, 9, 20, 0.2);
+}
+
+.article-modal-meta {
+    padding: 10px 20px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: #b3b3b3;
+    border-bottom: 1px solid #333;
+}
+
+.article-modal-meta span {
+    background: rgba(229, 9, 20, 0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.article-modal-body {
+    padding: 20px;
+}
+
+.article-modal-body img {
+    display: block;
+    margin: 0 auto 20px auto;
+}
+
+#modal-article-content {
+    color: #ffffff;
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+/* تجاوب مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .article-modal {
+        padding: 10px;
+    }
+    
+    .article-modal-content {
+        max-height: 95vh;
+    }
+    
+    .article-modal-header h2 {
+        font-size: 18px;
+    }
+    
+    .article-modal-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    #modal-article-content {
+        font-size: 14px;
+    }
 }
