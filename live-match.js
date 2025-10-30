@@ -1,44 +1,25 @@
-// مفتاح الـ API الخاص بك
-const token = "nSdbfmPCP2V8KKQ0ODIjC4LvxQN1XTiskOCBQ7ouY0iCgbp4YeUYHfAflMEf";
-
-// عنوان الطلب من Sportmonks
-const url = `https://api.sportmonks.com/v3/football/livescores?api_token=${token}`;
-
-// الدالة التي تجلب المباريات وتعرضها
-async function loadLiveMatches() {
+const url = "https://www.thesportsdb.com/api/v1/json/3/searchevents.php?e=Arsenal_vs_Chelsea&s=2016-2017";
+async function loadMatchData() {
   const container = document.getElementById("matches-container");
-  container.innerHTML = "<p>جارِ تحميل المباريات...</p>";
-
+  container.innerHTML = "<p>جارِ تحميل بيانات المباريات...</p>";
   try {
     const response = await fetch(url);
     const data = await response.json();
-
-    const matches = data.data;
-    if (!matches || matches.length === 0) {
-      container.innerHTML = "<p>لا توجد مباريات مباشرة الآن.</p>";
+    const events = data.event || [];
+    if (events.length === 0) {
+      container.innerHTML = "<p>لا توجد مباريات متاحة.</p>";
       return;
     }
-
-    container.innerHTML = ""; // مسح النص السابق
-
-    matches.forEach(match => {
+    container.innerHTML = "";
+    events.forEach(match => {
       const matchCard = document.createElement("div");
       matchCard.className = "match-card";
-      matchCard.innerHTML = `
-        <h3>${match.name}</h3>
-        <p>الحالة: ${match.time?.status || "غير متوفرة"}</p>
-        <p>توقيت البداية: ${match.time?.starting_at?.time || "غير محدد"}</p>
-      `;
+      matchCard.innerHTML = `<h3>${match.strEvent}</h3><p>التاريخ: ${match.dateEvent}</p>`;
       container.appendChild(matchCard);
     });
   } catch (error) {
-    console.error("خطأ أثناء جلب البيانات:", error);
+    console.error("خطأ في تحميل البيانات:", error);
     container.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات.</p>";
   }
 }
-
-// استدعاء الدالة عند تحميل الصفحة
-loadLiveMatches();
-
-// تحديث النتائج كل دقيقة
-setInterval(loadLiveMatches, 60000);
+loadMatchData();
