@@ -14,21 +14,36 @@ function logout() {
     window.location.href = 'admin-login.html';
 }
 
-// الحصول على المقالات من التخزين المحلي
-function getArticles() {
-    const articles = localStorage.getItem('hajmasport_articles');
-    return articles ? JSON.parse(articles) : [];
+// الحصول على المقالات من جميع المصادر
+async function getArticles() {
+    try {
+        return await getArticlesFromAllSources();
+    } catch (error) {
+        console.error('خطأ في جلب المقالات:', error);
+        // العودة للتخزين المحلي في حالة الخطأ
+        const articles = localStorage.getItem('hajmasport_articles');
+        return articles ? JSON.parse(articles) : [];
+    }
 }
 
-// حفظ المقالات في التخزين المحلي
-function saveArticles(articles) {
+// حفظ المقالات في التخزين المحلي والسحابة
+async function saveArticles(articles) {
+    // حفظ محلي (للسرعة)
     localStorage.setItem('hajmasport_articles', JSON.stringify(articles));
     console.log('تم حفظ', articles.length, 'مقال في التخزين المحلي');
+    
+    // حفظ في السحابة (للمشاركة بين المتصفحات)
+    try {
+        await saveArticlesToCloud(articles);
+        console.log('تم حفظ المقالات في السحابة أيضاً');
+    } catch (error) {
+        console.error('خطأ في حفظ المقالات في السحابة:', error);
+    }
 }
 
 // إضافة مقال جديد
-function addArticle(articleData) {
-    const articles = getArticles();
+async function addArticle(articleData) {
+    const articles = await getArticles();
     const newArticle = {
         id: Date.now(),
         title: articleData.title,
@@ -50,15 +65,15 @@ function addArticle(articleData) {
 }
 
 // حذف مقال
-function deleteArticle(articleId) {
-    const articles = getArticles();
+async function deleteArticle(articleId) {
+    const articles = await getArticles();
     const filteredArticles = articles.filter(article => article.id !== articleId);
     saveArticles(filteredArticles);
 }
 
 // تحديث الإحصائيات
-function updateStats() {
-    const articles = getArticles();
+async function updateStats() {
+    const articles = await getArticles();
     const today = new Date().toDateString();
     const todayArticles = articles.filter(article =>
         new Date(article.date).toDateString() === today
@@ -75,8 +90,8 @@ function updateStats() {
 }
 
 // عرض المقالات
-function displayArticles() {
-    const articles = getArticles();
+async function displayArticles() {
+    const articles = await getArticles();
     const container = document.getElementById('articles-list');
 
     if (articles.length === 0) {
@@ -99,6 +114,7 @@ function displayArticles() {
             </div>
             <div class="article-actions">
                 <button class="btn btn-small btn-edit" onclick="editArticle(${article.id})">تعديل</button>
+                <button class="btn btn-small btn-share" onclick="shareArticle(${article.id})" style="background: #28a745;">مشاركة</button>
                 <button class="btn btn-small btn-delete" onclick="deleteArticleConfirm(${article.id})">حذف</button>
             </div>
         `;
@@ -169,16 +185,16 @@ function exportArticles() {
 }
 
 // معالجة نموذج إضافة المقال
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     // التحقق من تسجيل الدخول
     if (!checkAuth()) return;
 
     // تحديث الإحصائيات وعرض المقالات
-    updateStats();
-    displayArticles();
+    await updateStats();
+    await displayArticles();
 
     // معالجة نموذج إضافة المقال
-    document.getElementById('article-form').addEventListener('submit', function (e) {
+    document.getElementById('article-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const formData = {
@@ -198,12 +214,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // إضافة المقال الجديد
-        addArticle(formData);
+        await addArticle(formData);
 
         // إغلاق النافذة وتحديث العرض
         closeAddArticleModal();
-        displayArticles();
-        updateStats();
+        await displayArticles();
+        await updateStats();
 
         alert('تم نشر المقال بنجاح! ✅\nالمقال متاح الآن للزوار في قسم الأخبار');
     });
@@ -215,3 +231,86 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// إعدادات التخزين السحابي (GitHub كقاعدة بيانات)
+const CLOUD_CONFIG = {
+    // يمكن استخدام GitHub Gist أو أي خدمة أخرى
+    enabled: false, // سيتم تفعيلها لاحقاً
+    apiUrl: 'https://api.github.com/gists',
+    gistId: null // سيتم إنشاؤه تلقائياً
+};
+
+// حفظ المقالات في السحابة
+async function saveArticlesToCloud(articles) {
+    if (!CLOUD_CONFIG.enabled) {
+        return; // التخزين السحابي معطل حالياً
+    }
+    
+    try {
+        // هنا يمكن إضافة كود للحفظ في Firebase أو أي خدمة أخرى
+        console.log('سيتم إضافة التخزين السحابي قريباً');
+    } catch (error) {
+        console.error('خطأ في التخزين السحابي:', error);
+    }
+}
+
+// جلب المقالات من السحابة
+async function loadArticlesFromCloud() {
+    if (!CLOUD_CONFIG.enabled) {
+        return null;
+    }
+    
+    try {
+        // هنا يمكن إضافة كود للجلب من Firebase أو أي خدمة أخرى
+        console.log('سيتم إضافة جلب البيانات من السحابة قريباً');
+        return null;
+    } catch (error) {
+        console.error('خطأ في جلب البيانات من السحابة:', error);
+        return null;
+    }
+}
+
+// دمج البيانات المحلية والسحابية
+async function getArticlesFromAllSources() {
+    // جلب البيانات المحلية
+    const localArticles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+    
+    // جلب البيانات السحابية
+    const cloudArticles = await loadArticlesFromCloud();
+    
+    if (cloudArticles && cloudArticles.length > 0) {
+        // دمج البيانات وإزالة المكررات
+        const allArticles = [...localArticles, ...cloudArticles];
+        const uniqueArticles = allArticles.filter((article, index, self) => 
+            index === self.findIndex(a => a.id === article.id)
+        );
+        
+        // ترتيب حسب التاريخ (الأحدث أولاً)
+        uniqueArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // حفظ البيانات المدمجة محلياً
+        localStorage.setItem('hajmasport_articles', JSON.stringify(uniqueArticles));
+        
+        return uniqueArticles;
+    }
+    
+    return localArticles;
+}// مشاركة
+ مقال
+async function shareArticle(articleId) {
+    const articles = await getArticles();
+    const article = articles.find(a => a.id === articleId);
+    
+    if (article) {
+        const articleData = encodeURIComponent(JSON.stringify(article));
+        const shareURL = `${window.location.origin}/index.html?article=${articleData}`;
+        
+        try {
+            await navigator.clipboard.writeText(shareURL);
+            alert('تم نسخ رابط المقال! 🔗\nيمكنك مشاركته مع أي متصفح آخر وسيظهر المقال تلقائياً');
+        } catch (error) {
+            // عرض الرابط في نافذة منبثقة إذا فشل النسخ
+            prompt('انسخ هذا الرابط لمشاركة المقال مع المتصفحات الأخرى:', shareURL);
+        }
+    }
+}

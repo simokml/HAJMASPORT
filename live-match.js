@@ -753,7 +753,7 @@ async function setupHomePage() {
         displayHomeContent(matchesData);
 
         // تحميل الأخبار مسبقاً (حتى لو لم تكن مرئية)
-        displayNews();
+        await displayNews();
 
         // إعداد التبويبات
         setupHomeTabs(matchesData);
@@ -777,28 +777,28 @@ async function setupHomePage() {
     }
 
     // تحديث الأخبار كل 10 ثوان للتأكد من ظهور المقالات الجديدة
-    setInterval(() => {
+    setInterval(async () => {
         // تحديث الأخبار فقط إذا كان تبويب الأخبار مرئي
         const newsSection = document.getElementById('news-section');
         if (newsSection && newsSection.style.display !== 'none') {
-            displayNews();
+            await displayNews();
         }
     }, 10000);
 
     // تحديث الأخبار عند العودة للصفحة (مثل العودة من صفحة المسؤول)
-    window.addEventListener('focus', () => {
-        displayNews();
+    window.addEventListener('focus', async () => {
+        await displayNews();
     });
 
     // مراقبة تحديثات الأخبار من لوحة التحكم
     let lastNewsUpdate = localStorage.getItem('news_updated') || '0';
-    setInterval(() => {
+    setInterval(async () => {
         const currentNewsUpdate = localStorage.getItem('news_updated') || '0';
         if (currentNewsUpdate !== lastNewsUpdate) {
             lastNewsUpdate = currentNewsUpdate;
-            displayNews();
+            await displayNews();
             // تحديث الأخبار في الصفحة الرئيسية أيضاً
-            displayHomeNews();
+            await displayHomeNews();
         }
     }, 2000);
 }
@@ -902,14 +902,14 @@ function displayHomeMatches(matchesData) {
     });
 }
 
-function displayHomeNews() {
+async function displayHomeNews() {
     const container = document.getElementById('home-news-container');
     if (!container) return;
 
     container.innerHTML = '';
 
-    // الحصول على المقالات من التخزين المحلي
-    const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+    // الحصول على المقالات من جميع المصادر
+    const articles = await getArticlesFromAllSources();
 
     if (articles.length === 0) {
         container.innerHTML = `
@@ -994,7 +994,7 @@ function setupHomeTabs(matchesData) {
                 // عرض الأخبار
                 showNewsSection();
                 // تحديث الأخبار في كل مرة يتم النقر على التبويب
-                setTimeout(() => displayNews(), 100);
+                setTimeout(async () => await displayNews(), 100);
             } else {
                 // عرض المباريات - جلب بيانات محدثة
                 showMatchesSection();
@@ -1033,12 +1033,12 @@ function showNewsSection() {
 }
 
 // عرض الأخبار
-function displayNews() {
+async function displayNews() {
     const container = document.getElementById('news-container');
     if (!container) return;
 
-    // الحصول على المقالات من التخزين المحلي
-    const articles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+    // الحصول على المقالات من جميع المصادر
+    const articles = await getArticlesFromAllSources();
 
     // تسجيل للتشخيص
     console.log('عدد المقالات المحفوظة:', articles.length);
@@ -1402,3 +1402,73 @@ async function getEnhancedHomePageData() {
         return await getHomePageData(); // العودة للطريقة الأساسية
     }
 }
+
+// دالة للحصول على المقالات من جميع المصادر (نسخة للصفحة الرئيسية)
+async function getArticlesFromAllSources() {
+    try {
+        // جلب البيانات المحلية
+        const localArticles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+
+        // في المستقبل يمكن إضافة جلب من السحابة هنا
+        // const cloudArticles = await loadArticlesFromCloud();
+
+        return localArticles;
+    } catch (error) {
+        console.error('خطأ في جلب المقالات:', error);
+        return [];
+    }
+}
+
+// حل مؤقت: مشاركة المقالات عبر URL
+function shareArticleViaURL(article) {
+    const articleData = encodeURIComponent(JSON.stringify(article));
+    const shareURL = `${window.location.origin}${window.location.pathname}?article=${articleData}`;
+
+    // نسخ الرابط للحافظة
+    navigator.clipboard.writeText(shareURL).then(() => {
+        alert('تم نسخ رابط المقال! يمكنك مشاركته مع المتصفحات الأخرى');
+    }).catch(() => {
+        // عرض الرابط في نافذة منبثقة إذا فشل النسخ
+        prompt('انسخ هذا الرابط لمشاركة المقال:', shareURL);
+    });
+}
+
+// تحميل مقال من URL عند فتح الصفحة
+function loadArticleFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const articleData = urlParams.get('article');
+
+    if (articleData) {
+        try {
+            const article = JSON.parse(decodeURIComponent(articleData));
+
+            // إضافة المقال للتخزين المحلي إذا لم يكن موجوداً
+            const existingArticles = JSON.parse(localStorage.getItem('hajmasport_articles') || '[]');
+            const articleExists = existingArticles.some(a => a.id === article.id);
+
+            if (!articleExists) {
+                existingArticles.unshift(article);
+                localStorage.setItem('hajmasport_articles', JSON.stringify(existingArticles));
+
+                // إشعار المستخدم
+                setTimeout(() => {
+                    alert('تم إضافة مقال جديد من الرابط المشارك! 📰');
+                    // إعادة تحميل الأخبار
+                    displayNews();
+                    displayHomeNews();
+                }, 1000);
+            }
+
+            // إزالة المعامل من URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+        } catch (error) {
+            console.error('خطأ في تحميل المقال من URL:', error);
+        }
+    }
+}
+
+// تشغيل تحميل المقال من URL عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadArticleFromURL();
+});
